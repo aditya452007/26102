@@ -20,15 +20,27 @@ type StatesGeoJson = {
 };
 
 const INDIA_GEO = indiaStates as unknown as StatesGeoJson;
-const MAP_CENTER = createCoordinates(82.06, 21.85);
-const MAP_SCALE = 680.42;
+const MAP_CENTER = createCoordinates(82.8, 22.75);
+const MAP_SCALE = 648.81;
 
-function fillFor(high: number): string {
-  if (high >= 2) {
-    return "color-mix(in oklch, var(--destructive) 15%, transparent)";
+function fillFor(high: number, works: number): string {
+  if (high >= 3) {
+    return "var(--destructive)";
+  }
+  if (high === 2) {
+    return "color-mix(in oklch, var(--destructive) 70%, transparent)";
   }
   if (high === 1) {
-    return "color-mix(in oklch, var(--amber-500) 20%, transparent)";
+    return "color-mix(in oklch, var(--destructive) 45%, transparent)";
+  }
+  if (works >= 8) {
+    return "color-mix(in oklch, var(--primary) 75%, transparent)";
+  }
+  if (works >= 4) {
+    return "color-mix(in oklch, var(--primary) 55%, transparent)";
+  }
+  if (works > 0) {
+    return "color-mix(in oklch, var(--primary) 35%, transparent)";
   }
   return "var(--muted)";
 }
@@ -89,7 +101,7 @@ export function IndiaRiskMap({ data, selected, onSelect }: IndiaRiskMapProps) {
                         }}
                         onMouseLeave={() => setHover(null)}
                         style={{
-                          default: { fill: fillFor(counts?.high ?? 0), outline: "none" },
+                          default: {                             fill: fillFor(counts?.high ?? 0, counts?.works ?? 0), outline: "none" },
                           hover: { fill: "color-mix(in oklch, var(--primary) 25%, transparent)", outline: "none" },
                           pressed: { outline: "none" },
                         }}
@@ -113,14 +125,25 @@ export function IndiaRiskMap({ data, selected, onSelect }: IndiaRiskMapProps) {
           <div className="absolute bottom-2 left-2 flex items-center gap-3 rounded-md border bg-card/90 px-2.5 py-1.5 text-muted-foreground text-xs">
             <span className="flex items-center gap-1.5">
               <span className="size-3 rounded-sm border bg-muted" />
-              No flags
+              No works
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="size-3 rounded-sm border bg-amber-500/15" />1 flag
+              <span className="size-3 rounded-sm border bg-primary/35" />
+              Few works
             </span>
             <span className="flex items-center gap-1.5">
-              <span className="size-3 rounded-sm border bg-destructive/15" />
-              2+ flags
+              <span className="size-3 rounded-sm border bg-primary/75" />
+              Many works
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-3 rounded-sm border bg-destructive/45" />1 high flag
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-3 rounded-sm border bg-destructive/70" />2 high flags
+            </span>
+            <span className="flex items-center gap-1.5">
+              <span className="size-3 rounded-sm border bg-destructive" />
+              3+ high flags
             </span>
           </div>
         </div>

@@ -21,8 +21,8 @@ type StatesGeoJson = {
 };
 
 const INDIA_GEO = indiaStates as unknown as StatesGeoJson;
-const MAP_CENTER = createCoordinates(82.06, 21.85);
-const MAP_SCALE = 680.42;
+const MAP_CENTER = createCoordinates(82.8, 22.75);
+const MAP_SCALE = 648.81;
 
 interface WorkLocationMapProps {
   work: Work;
