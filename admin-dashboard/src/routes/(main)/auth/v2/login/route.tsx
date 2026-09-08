@@ -1,13 +1,26 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 
 import { Globe } from "lucide-react";
+import { z } from "zod";
 
 import { APP_CONFIG } from "@/config/app-config";
+import { getValueFromCookie } from "@/server/server-actions";
+import { SESSION_COOKIE_KEY } from "@/stores/session/session-store";
 
 import { LoginForm } from "../../-components/login-form";
 import { GoogleButton } from "../../-components/social-auth/google-button";
 
+const loginSearchSchema = z.object({
+  redirect: z.string().optional(),
+});
+
 export const Route = createFileRoute("/(main)/auth/v2/login")({
+  validateSearch: loginSearchSchema,
+  beforeLoad: async ({ search }) => {
+    if (await getValueFromCookie(SESSION_COOKIE_KEY)) {
+      throw redirect({ to: search.redirect ?? "/dashboard/overview", replace: true });
+    }
+  },
   component: LoginV2,
 });
 

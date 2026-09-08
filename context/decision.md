@@ -35,6 +35,7 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-023 | 2026-09-08 | Auth shell on branch `20260908-auth-shell`: v2 login/register default (v1→v2 shims), prototype cookie session + dashboard guard, new Notifications + Settings pages | Accepted | auth routes, session store, dashboard shell, sidebar, page-assistant |
 | ADR-017 | 2026-09-07 | Dev-only `agentation@3.0.2` visual-feedback overlay mounted in root shell (NODE_ENV-gated) | Superseded by ADR-018 | package.json, routes/__root.tsx |
 | ADR-018 | 2026-09-07 | Remove agentation (duplicate-React hook crash); adopt template chat as Sentinel Copilot page + sidebar entry | Accepted | routes/(main)/chat/**, sidebar-items.ts |
 | ADR-019 | 2026-09-07 | Assistant becomes anchored popover drawer with free-text input + localStorage persistence; Enter-to-send in composers | Accepted | page-assistant, chat thread |
@@ -76,6 +77,16 @@
 ---
 
 ## Decision Entries
+
+### ADR-023: Prototype auth shell — v2 default, cookie session, notifications + settings
+- **Date**: 2026-09-08
+- **Status**: Accepted
+- **Context**: Login/register were non-operational (no session, no guard, register dumped JSON, Google button dead); no notifications or settings pages; user ordered v2 as default + real auth behavior on a verify-first branch.
+- **Options considered**: Full credential backend now (rejected — no Python backend exists yet; blocks the demo); keep v1 screens (rejected — user explicitly chose v2); new shared auth abstraction layer (rejected — OC principle: extend via new store + shims, mirror the existing role-store cookie pattern).
+- **Decision**: `stores/session/` (opaque token + officer email cookies, 7d, sameSite lax via existing server fns — no server-actions change); dashboard `beforeLoad` guard with `?redirect=` return; v1 routes become redirect shims; login/register forms create the session; Google button gets an honest unavailable toast; new `/dashboard/notifications` (derived from flags/stalls/UC/overdue, read-state + prefs in localStorage) and `/dashboard/settings` (officer card, prefs switches, sign-out, prototype note); sidebar + account menu + page-assistant extended; v2 side-panel copy rebranded to MPLADS.
+- **Why**: Smallest change that makes auth actually operate end-to-end (sign in → guard → sign out) while staying honest that it is a demo cookie the Python backend will replace with signed sessions.
+- **Consequences**: Session is not real security (any valid-shaped credentials work; cookies not httpOnly) — must be replaced backend-side, never hardened client-side. Branch `20260908-auth-shell` awaits user verification before merge.
+- **Affects**: auth routes, session store, dashboard shell, sidebar-items, account-switcher, page-assistant, notifications/settings pages
 
 ### ADR-020: Agentation reinstalled — duplicate React fixed via dedupe
 - **Date**: 2026-09-07

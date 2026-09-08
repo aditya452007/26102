@@ -1,13 +1,20 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
+import { createFileRoute, Link, redirect } from "@tanstack/react-router";
 
 import { Globe } from "lucide-react";
 
 import { APP_CONFIG } from "@/config/app-config";
+import { getValueFromCookie } from "@/server/server-actions";
+import { SESSION_COOKIE_KEY } from "@/stores/session/session-store";
 
 import { RegisterForm } from "../../-components/register-form";
 import { GoogleButton } from "../../-components/social-auth/google-button";
 
 export const Route = createFileRoute("/(main)/auth/v2/register")({
+  beforeLoad: async () => {
+    if (await getValueFromCookie(SESSION_COOKIE_KEY)) {
+      throw redirect({ to: "/dashboard/overview", replace: true });
+    }
+  },
   component: RegisterV2,
 });
 
