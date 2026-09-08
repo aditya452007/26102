@@ -1,3 +1,5 @@
+import { useNavigate } from "@tanstack/react-router";
+
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
 import { z } from "zod";
@@ -6,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
+import { useSessionStore } from "@/stores/session/session-store";
 
 const formSchema = z
   .object({
@@ -18,18 +21,9 @@ const formSchema = z
     path: ["confirmPassword"],
   });
 
-const onSubmit = (data: z.infer<typeof formSchema>) => {
-  toast.add({
-    title: "You submitted the following values",
-    description: (
-      <pre className="mt-2 w-[320px] rounded-md bg-neutral-950 p-4">
-        <code className="text-white">{JSON.stringify(data, null, 2)}</code>
-      </pre>
-    ),
-  });
-};
-
 export function RegisterForm() {
+  const navigate = useNavigate();
+  const signIn = useSessionStore((state) => state.signIn);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -38,6 +32,15 @@ export function RegisterForm() {
       confirmPassword: "",
     },
   });
+
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    await signIn(data.email);
+    toast.add({
+      title: "Account created (prototype)",
+      description: `Welcome, ${data.email}. Session is a demo cookie until the backend lands.`,
+    });
+    await navigate({ to: "/dashboard/overview", replace: true });
+  };
 
   return (
     <form noValidate onSubmit={form.handleSubmit(onSubmit)} className="flex flex-col gap-4">

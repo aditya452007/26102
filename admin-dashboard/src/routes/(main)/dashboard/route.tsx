@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
+import { useEffect } from "react";
 
-import { createFileRoute, Outlet, useRouterState } from "@tanstack/react-router";
+import { createFileRoute, Outlet, redirect, useRouterState } from "@tanstack/react-router";
 
 import { cn } from "cn";
 
@@ -9,6 +10,7 @@ import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/s
 import { users } from "@/data/users";
 import { getDashboardLayout, getValueFromCookie } from "@/server/server-actions";
 import { parseRole, ROLE_COOKIE_KEY } from "@/stores/role/role-store";
+import { OFFICER_COOKIE_KEY, SESSION_COOKIE_KEY, useSessionStore } from "@/stores/session/session-store";
 
 import { AccountSwitcher } from "./-components/header/account-switcher";
 import { GitHubRepositoriesMenu } from "./-components/header/github-repositories-menu";
@@ -20,15 +22,29 @@ import { PageAssistant, resolvePageContext } from "./-components/page-assistant"
 import { AppSidebar } from "./-components/sidebar/app-sidebar";
 
 export const Route = createFileRoute("/(main)/dashboard")({
+  beforeLoad: async ({ location }) => {
+    const session = await getValueFromCookie(SESSION_COOKIE_KEY);
+    if (!session) {
+      throw redirect({ to: "/auth/v2/login", search: { redirect: location.href }, replace: true });
+    }
+  },
   loader: async () => {
     const layout = await getDashboardLayout();
-    return { ...layout, role: parseRole(await getValueFromCookie(ROLE_COOKIE_KEY)) };
+    return {
+      ...layout,
+      role: parseRole(await getValueFromCookie(ROLE_COOKIE_KEY)),
+      officerEmail: (await getValueFromCookie(OFFICER_COOKIE_KEY)) ?? "",
+    };
   },
   component: DashboardLayout,
 });
 
 function DashboardLayout() {
-  const { defaultOpen, variant, collapsible, role } = Route.useLoaderData();
+  const { defaultOpen, variant, collapsible, role, officerEmail } = Route.useLoaderData();
+  const hydrateSession = useSessionStore((state) => state.hydrate);
+  useEffect(() => {
+    hydrateSession(officerEmail || null);
+  }, [hydrateSession, officerEmail]);
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const assistant = resolvePageContext(pathname);
 

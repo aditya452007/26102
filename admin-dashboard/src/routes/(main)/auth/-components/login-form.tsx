@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 
 import { zodResolver } from "@hookform/resolvers/zod";
 import { Controller, useForm } from "react-hook-form";
@@ -9,6 +9,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Field, FieldContent, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
 import { toast } from "@/components/ui/toast";
+import { useSessionStore } from "@/stores/session/session-store";
 
 const formSchema = z.object({
   email: z.email({ message: "Please enter a valid email address." }),
@@ -18,6 +19,8 @@ const formSchema = z.object({
 
 export function LoginForm() {
   const navigate = useNavigate();
+  const { redirect } = useSearch({ strict: false }) as { redirect?: string };
+  const signIn = useSessionStore((state) => state.signIn);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -27,12 +30,13 @@ export function LoginForm() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof formSchema>) => {
+  const onSubmit = async (data: z.infer<typeof formSchema>) => {
+    await signIn(data.email);
     toast.add({
       title: "Signed in (prototype)",
-      description: `Welcome back, ${data.email}. No real authentication in the prototype.`,
+      description: `Welcome back, ${data.email}. Session is a demo cookie until the backend lands.`,
     });
-    void navigate({ to: "/dashboard/overview" });
+    await navigate({ to: redirect ?? "/dashboard/overview", replace: true });
   };
 
   return (

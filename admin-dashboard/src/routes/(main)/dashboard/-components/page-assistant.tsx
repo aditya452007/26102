@@ -284,6 +284,44 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
     };
   }
 
+  if (clean === "/dashboard/notifications") {
+    const summary = `Notifications: attention items derived from high-risk flags, stalls, UC-pending and overdue works. Open any row to verify in its dossier.`;
+    const chips = ["What needs attention?", "How do I clear these?", "Where do I change preferences?"] as const;
+    return {
+      contextTitle: "Notifications — attention items",
+      summary,
+      chips,
+      answer: (question: string) => {
+        if (question === "How do I clear these?") {
+          return "Open the work to mark its item read, or use Mark all read. Clearing a notification never changes the underlying flag — verify in the dossier and record a decision.";
+        }
+        if (question === "Where do I change preferences?") {
+          return "Settings → Notifications switches each category (high-risk, stalls, UC, overdue) on or off. The list filters immediately.";
+        }
+        return `${reviewCount} flags need review (${highCount} high-risk). Start with the high-risk rows at the top.`;
+      },
+    };
+  }
+
+  if (clean === "/dashboard/settings") {
+    const summary = `Settings: jurisdiction scope, review-log export, notification preferences, and workspace reset.`;
+    const chips = ["What scope am I in?", "How do I export my reviews?", "Is this real authentication?"] as const;
+    return {
+      contextTitle: "Settings — officer and preferences",
+      summary,
+      chips,
+      answer: (question: string) => {
+        if (question === "What scope am I in?") {
+          return "Jurisdiction cards switch District (Bhopal), State (MP), or Ministry (all states) with live demo counts. The lens scopes every queue, map, and dossier count.";
+        }
+        if (question === "How do I export my reviews?") {
+          return "The review-log card lists your recorded decisions with an Export CSV button — the audit trail to take out of the demo.";
+        }
+        return "Sign-in is a demo cookie for the prototype — any valid-shaped credentials work. Real sessions arrive with the Python backend.";
+      },
+    };
+  }
+
   const fallback = `MPLADS Sentinel: ${MPLADS_KPIS.totalWorks.toLocaleString("en-IN")} works · ${MPLADS_KPIS.highRisk} high-risk · ${MPLADS_KPIS.delayed} delayed. Use Overview to triage, Works to filter, and a dossier to verify.`;
   return {
     contextTitle: "Dashboard — MPLADS Sentinel",

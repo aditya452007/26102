@@ -125,7 +125,7 @@ Extended: KPI strip (sanctioned/spent/progress/stall/flags/labour) + map/tender 
 
 | Route | Source | Purpose |
 |-------|--------|---------|
-| `/auth/v1|v2/login|register` | template (reuse) | Officer sign-in (any valid-shaped input → toast → `/dashboard/overview`) |
+| `/auth/v1|v2/login|register` | **v2 is default; v1 routes are redirect shims to v2** (ADR-023) | Officer sign-in (valid-shaped credentials → demo cookie session → `/dashboard/overview` or `?redirect=`) |
 | `/` and `/dashboard` | redirect (SPEC 01) | Entry → `/dashboard/overview`, zero clicks |
 | `/dashboard/default` etc. | template (donor only) | Reference screens — NOT in MVP nav |
 | `/overview` | **to build** | KPIs + map + priority queue |
@@ -134,7 +134,7 @@ Extended: KPI strip (sanctioned/spent/progress/stall/flags/labour) + map/tender 
 | `/works` | **BUILT (SPEC 03)** at `/dashboard/works`: full ledger (URL `?lens=&state=&district=&type=&q=`, 10-col table, pagination) | Search/filter/sort works |
 | `/works/:workId` | **BUILT (SPEC 04 + 006 extension)** at `/dashboard/works/$workId`: 6 tabs (overview/financials/progress/anomalies/evidence/activity), tender block, map pin, money strip, duplicate verdict, sticky decision bar, contextual AI | Dossier |
 | Adopted (006, in-place relabel on mock data) | `finance` → fund flow · `analytics` → performance · `tasks` → verification queue · `calendar` → deadlines (56 derived events) · `file-manager` → documents library · `invoice` → UC tracking | Officer workflow pages |
-| Sidebar nav | single MPLADS group: Overview/Works/Fund Flow/Performance/Verifications/Deadlines/Documents/UC Tracking (006) | Discoverability |
+| Sidebar nav | single MPLADS group: Overview/Works/Fund Flow/Performance/Verifications/Deadlines/Documents/UC Tracking (006) + AI Copilot + Notifications + Settings (ADR-023) | Discoverability |
 | `/ai` | **to build** on `(main)/chat/` | Global copilot |
 | Sidebar nav | `navigation/sidebar/sidebar-items.ts` | Replace groups with MVP nav (Overview/Works/AI + dossier via click) |
 
@@ -147,11 +147,14 @@ Extended: KPI strip (sanctioned/spent/progress/stall/flags/labour) + map/tender 
 | `anomalies.list` | workId \| filters | Anomaly[] (+peer stats) | precomputed mock flags |
 | `evidence.list/upload` | workId / file+meta | Evidence[] | local records |
 | `decisions.record` | workId, status, note | Activity entry | in-memory |
+| `session.signIn/signOut` | email (Zod-validated form) | `mplads_session` + `mplads_officer` cookies (7d) | cookie store, prototype |
+| `notifications.list` | prefs filter | derived attention items (flags/stalls/UC/overdue) | mock-derived, read-state local |
 | `ai.chat` | message + page context | answer + tool calls | to design (tool layer: getWork, comparePeers, explainFlag, searchWorks) |
 
 ## State flow
 
 1. Route loaders/server fns return Zod-typed data (mock today, DB later — same shapes).
+2. Session: dashboard `beforeLoad` requires `mplads_session` cookie, else redirect to `/auth/v2/login?redirect=`; auth routes bounce signed-in officers to overview; `useSessionStore` hydrates email from the dashboard loader (prototype cookie, not real security).
 2. Role lens: header `RoleSwitcher` → `useRoleStore` (`src/stores/role/`) + `mplads_role` cookie (7d); dashboard loader hydrates the store; queue/map read role as a scope preset (Ministry = all 40, the first-paint default; State = MP; District = Bhopal).
 2. Dossier/AI conversation state: local component state first; promote to zustand store only when cross-route need is proven.
 3. Preferences (theme/layout) persist via existing cookie-backed server fns — untouched.

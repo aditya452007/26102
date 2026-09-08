@@ -1,7 +1,9 @@
 import { useState } from "react";
 
+import { useNavigate } from "@tanstack/react-router";
+
 import { cn } from "cn";
-import { BadgeCheck, Bell, Check, CreditCard, LogOut } from "lucide-react";
+import { Bell, Check, LogOut, Settings } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -13,6 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { getInitials } from "@/lib/utils";
+import { useSessionStore } from "@/stores/session/session-store";
 
 export function AccountSwitcher({
   users,
@@ -26,6 +29,13 @@ export function AccountSwitcher({
   }>;
 }) {
   const [activeUser, setActiveUser] = useState(users[0]);
+  const navigate = useNavigate();
+  const signOut = useSessionStore((state) => state.signOut);
+
+  async function handleSignOut() {
+    await signOut();
+    await navigate({ to: "/auth/v2/login", replace: true });
+  }
 
   if (!activeUser) {
     return null;
@@ -67,21 +77,17 @@ export function AccountSwitcher({
         ))}
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            <BadgeCheck />
+          <DropdownMenuItem onClick={() => void navigate({ to: "/dashboard/settings" })}>
+            <Settings />
             Account
           </DropdownMenuItem>
-          <DropdownMenuItem>
-            <CreditCard />
-            Billing
-          </DropdownMenuItem>
-          <DropdownMenuItem>
+          <DropdownMenuItem onClick={() => void navigate({ to: "/dashboard/notifications" })}>
             <Bell />
             Notifications
           </DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
+        <DropdownMenuItem onClick={() => void handleSignOut()}>
           <LogOut />
           Log out
         </DropdownMenuItem>

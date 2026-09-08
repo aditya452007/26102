@@ -1,5 +1,6 @@
 import {
   Banknote,
+  Bell,
   Calendar,
   CheckSquare,
   FolderOpen,
@@ -8,6 +9,7 @@ import {
   ListTodo,
   type LucideIcon,
   ReceiptText,
+  Settings,
   Sparkles,
 } from "lucide-react";
 
@@ -110,6 +112,18 @@ export const sidebarItems: NavGroup[] = [
         title: "AI Copilot",
         url: "/chat",
         icon: Sparkles,
+      },
+      {
+        id: "notifications",
+        title: "Notifications",
+        url: "/dashboard/notifications",
+        icon: Bell,
+      },
+      {
+        id: "settings",
+        title: "Settings",
+        url: "/dashboard/settings",
+        icon: Settings,
       },
     ],
   },
