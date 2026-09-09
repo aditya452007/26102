@@ -1,7 +1,7 @@
 {
-  "short_name": "Admin Dashboard",
-  "name": "Admin Dashboard - TanStack Start Dashboard",
-  "description": "A modern, customizable admin dashboard template built with TanStack Start and shadcn/ui.",
+  "short_name": "NIRIKSHAN-AI",
+  "name": "NIRIKSHAN-AI - MPLADS Risk Intelligence",
+  "description": "Explainable MPLADS risk-intelligence workspace for SIH26102 demo.",
   "icons": [
     {
       "src": "favicon.ico",

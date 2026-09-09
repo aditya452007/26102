@@ -71,7 +71,7 @@ export function DossierOverview({ work, decision, stallDays, utilisationPct }: D
                   {decision ? DECISION_META[decision.status].label : "Active review"}
                 </p>
                 <p className="text-muted-foreground text-xs">
-                  {decision ? "Decision recorded — see activity" : "Flagged by Sentinel — needs review"}
+                  {decision ? "Decision recorded — see activity" : "Flagged by NIRIKSHAN — needs review"}
                 </p>
               </div>
             </div>

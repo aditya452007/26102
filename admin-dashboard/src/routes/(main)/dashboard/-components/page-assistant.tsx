@@ -322,16 +322,16 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
     };
   }
 
-  const fallback = `MPLADS Sentinel: ${MPLADS_KPIS.totalWorks.toLocaleString("en-IN")} works · ${MPLADS_KPIS.highRisk} high-risk · ${MPLADS_KPIS.delayed} delayed. Use Overview to triage, Works to filter, and a dossier to verify.`;
+  const fallback = `NIRIKSHAN-AI: ${MPLADS_KPIS.totalWorks.toLocaleString("en-IN")} works · ${MPLADS_KPIS.highRisk} high-risk · ${MPLADS_KPIS.delayed} delayed. Use Overview to triage, Works to filter, and a dossier to verify.`;
   return {
-    contextTitle: "Dashboard — MPLADS Sentinel",
+    contextTitle: "Dashboard — NIRIKSHAN-AI",
     summary: fallback,
-    chips: ["What needs attention?", "Where do I start?", "What is MPLADS Sentinel?"],
+    chips: ["What needs attention?", "Where do I start?", "What is NIRIKSHAN-AI?"],
     answer: (question: string) => {
       if (question === "Where do I start?") {
         return "Start at Overview (KPIs + map + 8-row queue), filter in Works, then verify one dossier: anomalies, evidence, assistant, decision.";
       }
-      if (question === "What is MPLADS Sentinel?") {
+      if (question === "What is NIRIKSHAN-AI?") {
         return "An investigation workspace: thousands of works become a prioritized, explainable case file. Flags mean needs review, never fraud.";
       }
       return fallback;
