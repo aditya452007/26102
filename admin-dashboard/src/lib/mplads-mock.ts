@@ -455,7 +455,7 @@ function buildActivities(anomalies: Anomaly[]): Activity[] {
       id: `T-${counter++}`,
       workId: anomaly.workId,
       at: `${dayString(subDays(DEMO_TODAY, 2))}T09:00:00.000Z`,
-      actor: "Sentinel engine (demo)",
+      actor: "NIRIKSHAN engine (demo)",
       action: "Flag raised — needs review",
       note: anomaly.headline,
     });

@@ -15,7 +15,7 @@ function Layout() {
         <div className="relative order-2 hidden h-full rounded-3xl bg-primary lg:flex">
           <div className="absolute top-10 space-y-1 px-10 text-primary-foreground">
             <Command className="size-10" />
-            <h1 className="font-medium text-2xl">MPLADS Sentinel</h1>
+            <h1 className="font-medium text-2xl">NIRIKSHAN-AI</h1>
             <p className="text-sm">Prioritise. Explain. Verify. Decide.</p>
           </div>
 

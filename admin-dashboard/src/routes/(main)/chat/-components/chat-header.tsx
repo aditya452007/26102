@@ -18,7 +18,7 @@ export function ChatHeader({ query, onQueryChange }: ChatHeaderProps) {
     <header className="sticky top-0 z-50 flex h-(--header-height) w-full items-center border-b bg-background">
       <div className="flex h-full w-full items-center justify-between gap-3 px-4">
         <div className="flex min-w-0 flex-1 items-center gap-3">
-          <h1 className="text-nowrap font-medium text-base">Sentinel Copilot</h1>
+          <h1 className="text-nowrap font-medium text-base">NIRIKSHAN Copilot</h1>
           <InputGroup className="h-7 w-full max-w-sm">
             <InputGroupInput
               className="h-7"

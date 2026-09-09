@@ -83,7 +83,7 @@ function threadExplanation(workId: string): string {
 }
 
 const copilotContact: Contact = {
-  name: "Sentinel Copilot",
+  name: "NIRIKSHAN Copilot",
   role: "MPLADS review assistant",
   company: "MoSPI · SIH26102 demo",
   email: "copilot@example.com",
@@ -99,7 +99,7 @@ const copilotContact: Contact = {
 const copilotConversation: Conversation = {
   id: COPILOT_ID,
   group: "Pinned",
-  name: "Sentinel Copilot",
+  name: "NIRIKSHAN Copilot",
   subject: "Ask about any flagged work",
   preview: "Why was W-1014 flagged? Which works are high-risk?",
   time: "now",

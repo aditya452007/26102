@@ -120,7 +120,7 @@ export function DossierAnomalies({ work, flags, evidenceCount, ucPending, onGoTa
         <Empty>
           <EmptyHeader>
             <EmptyTitle>No open flags</EmptyTitle>
-            <EmptyDescription>Sentinel found no anomalies for this work in the demo dataset.</EmptyDescription>
+            <EmptyDescription>NIRIKSHAN found no anomalies for this work in the demo dataset.</EmptyDescription>
           </EmptyHeader>
         </Empty>
         <Empty>

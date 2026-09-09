@@ -35,6 +35,7 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|---------|
+| ADR-024 | 2026-09-09 | Rebrand display to NIRIKSHAN-AI (display-only, copilot→NIRIKSHAN, package.json untouched) | Accepted | app-config, manifest, auth v2 panel, chat, page-assistant, dossier, mock |
 | ADR-023 | 2026-09-08 | Auth shell on branch `20260908-auth-shell`: v2 login/register default (v1→v2 shims), prototype cookie session + dashboard guard, new Notifications + Settings pages | Accepted | auth routes, session store, dashboard shell, sidebar, page-assistant |
 | ADR-017 | 2026-09-07 | Dev-only `agentation@3.0.2` visual-feedback overlay mounted in root shell (NODE_ENV-gated) | Superseded by ADR-018 | package.json, routes/__root.tsx |
 | ADR-018 | 2026-09-07 | Remove agentation (duplicate-React hook crash); adopt template chat as Sentinel Copilot page + sidebar entry | Accepted | routes/(main)/chat/**, sidebar-items.ts |
@@ -77,6 +78,16 @@
 ---
 
 ## Decision Entries
+
+### ADR-024: Rebrand display to NIRIKSHAN-AI — display-only, copilot follows
+- **Date**: 2026-09-09
+- **Status**: Accepted
+- **Context**: Home/sidebar still showed template "Admin Dashboard"; jury demo needs proper NIRIKSHAN-AI naming. User chose exact spelling NIRIKSHAN-AI, display-only scope, and Sentinel→NIRIKSHAN rename.
+- **Options considered**: Full rebrand incl. package.json name change (rejected — build/tooling churn, user chose display-only); keep Sentinel sub-brand (rejected — user explicitly chose NIRIKSHAN Copilot for consistency).
+- **Decision**: Update `APP_CONFIG` (name/copyright/title/description) + `manifest.json` (short_name/name/description); auth v2 panel → NIRIKSHAN-AI; chat header/data → NIRIKSHAN Copilot; page-assistant fallback/title/chips + dossier strings + mock actor → NIRIKSHAN. Leave `package.json` name as `admin-dashboard`. Sidebar needs no edit (reads APP_CONFIG.name).
+- **Why**: Smallest diff that makes every jury-visible surface say NIRIKSHAN-AI while keeping installs/builds stable; single source (APP_CONFIG) prevents future drift.
+- **Consequences**: Any new UI copy must use NIRIKSHAN-AI / NIRIKSHAN Copilot, never Sentinel or Admin Dashboard. Package rename remains open if ever needed.
+- **Affects**: app-config, manifest, auth v2 panel, chat, page-assistant, dossier, mock
 
 ### ADR-023: Prototype auth shell — v2 default, cookie session, notifications + settings
 - **Date**: 2026-09-08
