@@ -4,17 +4,18 @@ Update this file after every meaningful implementation change.
 
 ## Current Phase
 
-**Phase 1 — SIH26102 MVP (MPLADS Sentinel)**
+**Phase 2 — Backend foundation (docs complete, implementation next)**
 
 MPLADS anomaly-detection workspace for SIH 2026 (MoSPI). Frontend shell runs; prototype UI-first on mock data; backend/ML behind identical interfaces next.
 
 ## Current Goal
 
-Scaffold the 5 MVP routes (`/login`, `/overview`, `/works`, `/works/:workId`, `/ai`) in `admin-dashboard/` by cloning donor screens, with `src/lib/mplads-schema.ts` Zod contract + bundled mock data — judge-demoable end to end.
+Specify the backend completely, then implement `backend/` (FastAPI + Postgres + rule-based analytics) so the frontend's mock→real swap is a one-line change per call site. Docs-first: `context/backend/` + per-feature `Feature_docs/NN-*/backend.md` are the source of truth — the implementation AI reads them, never invents shapes.
 
 ## Completed
 
-- **008 rebrand to NIRIKSHAN-AI (2026-09-09)** — display rename per user choice (NIRIKSHAN-AI, display-only, copilot→NIRIKSHAN): `app-config.ts` name/copyright/title/description, `manifest.json` short_name/name/description, auth v2 side-panel, chat header + data (NIRIKSHAN Copilot), page-assistant fallback/title/chips, dossier flagged/empty strings, mock engine actor. Sidebar auto-picks APP_CONFIG.name. `package.json` name left as `admin-dashboard`. Verify: rg sweep zero remaining Admin Dashboard/Sentinel strings.
+- **Backend structure, analytics + per-feature specs on `009-backend-foundation` (2026-09-14)** — user locked the remaining architecture calls (Pony ORM for minimum-line data access — clarifying their "ponytail"; pandas for detector math; versioned lru_cache TTL caching; JWT role-scoped auth; specs placed feature-first). New: `context/backend/structure.md` (feature-first controller→service→repository law: router ≤15 lines → service (Pydantic in/out) → repo (only Pony-speaking layer), entities in `core/db.py`, plain-`def` handlers via threadpool, banned anti-patterns) and `context/backend/analytics-cache.md` (pure-pandas detector pipeline → compute+store anomalies+signals in one tx → version bump; read models cached via a ~30-line `@cached(version, ttl)` lru_cache decorator; scope-in-key; what is deliberately NOT cached). Per-feature backend specs ADDED alongside each frontend spec: `Feature_docs/01-login/backend.md` (JWT HS256 1 h, role+scope claims, 3 seeded demo officers, RBAC enforcement table, 403-vs-404 rule), `02-overview/backend.md` (KPI/geo/queue derivations + cache table), `03-works/backend.md` (filter/sort/pagination semantics mirroring the URL, peers endpoint), `04-work-dossier/backend.md` (one dossier bundle endpoint, evidence multipart rules, transactional decision+activity), `05-ai-copilot/backend.md` (4 deterministic tool endpoints as projections of the same services; NO /ai/chat). Amended for Pony: README.md (stack table, layout, doc order), data-model.md (entity source of truth + scope-matching note). Context synced: ADR-026–029, flow.md structure + caching layers, this entry.
+- **009 backend documentation on `009-backend-foundation` (2026-09-14, branch off main after merging 008)** — API documentation FIRST per user direction (FastAPI + Postgres + rule-based analytics engine; no ML, no LLM in v1). Created `context/backend/` doc set: `README.md` (architecture, async SQLAlchemy 2.0 + uv + Docker stack, JWT+RBAC scoping, server-fn proxy integration model, error model), `data-model.md` (7 tables DDL-level: officers/works/anomalies/anomaly_signals/evidences/activities/work_decisions + indexes + derived views), `api-reference.md` (every v1 endpoint with full JSON examples: auth, works ledger/dossier/peers, anomalies, recompute, evidence upload, decisions/activity, notifications derivation, overview KPIs/geo/queue, copilot tools), `anomaly-engine.md` (5 rule-based detectors with exact formulas, severity bands, output strings, dedupe + replace-in-transaction semantics), `seed-generator.md` (verified mulberry32 Python port — test vectors proven identical to TS in Node AND Python 3.13 to 10 decimals; 5 rng streams; per-work call order; pinned W-1014/A-1 values; parity test plan). Context synced: ADR-025, flow.md backend sequence diagram + endpoint map, this entry. Next: implement `backend/` package per the docs.
 - **007 auth shell on `20260908-auth-shell` (2026-09-08, AWAITING user verification)** — v2 login/register are the default (v1 routes are redirect shims); prototype cookie session (`mplads_session` + `mplads_officer`, 7d) with dashboard `beforeLoad` guard + `?redirect=` return; login/register forms create the session; Google button shows honest unavailable toast; NEW `/dashboard/notifications` (flag/stall/UC/overdue items, read-state + prefs) and `/dashboard/settings` (officer card, prefs switches, sign-out, prototype note); sidebar + account menu + page-assistant extended; v2 side-panel rebranded to MPLADS. Follow-up: Settings upgraded from modular cards to an officer command strip (jurisdiction scope cards with live counts, review-log CSV export, workspace reset with confirm). No validation run per repo law — user verifies via dev server.
 
 - **006 officer workspace on `006-officer-workspace` (2026-09-07)** — SPEC 04 committed (`c996b6e`, incl. row-click dossier entry), then 4 parallel worktree lanes merged conflict-free (1bc61dd/7644b6c/a22dddb/53d7b26): (A) contract extension — Work gains tenderHolder/tenderAwardedBy/department/labourDeployed/demandedDays/returnedLakh (W-1014 pinned) + dossier tender block, location map pin, spent/balance/returned strip, duplicate verdict; (B) finance→fund flow + analytics→performance relabeled onto mock aggregates, dead controls removed/wired (CSV exports real); (C) tasks→verification queue, calendar→deadlines (56 derived events), file-manager→documents library, invoice→UC tracking; (D) single MPLADS sidebar group (8 links) + floating Ask-AI toggle on every dashboard page with page context. Verify per lane + per merge: tsc zero-new (3 pre-existing only), biome clean, `vite build` ✓ after every merge.
@@ -45,19 +46,19 @@ Scaffold the 5 MVP routes (`/login`, `/overview`, `/works`, `/works/:workId`, `/
 
 ## Next Up
 
-1. Create `src/lib/mplads-schema.ts` (Work/Anomaly/Evidence/Activity Zod shapes) + seed mock data
-2. Build `/overview` (KPIs + priority queue; India map after TopoJSON sourced)
-3. Build `/works` table + `/works/:workId` dossier (anomaly explainer first — it's the differentiator)
-4. Wire `/ai` on chat donor; decide AI provider + tool layer
-5. Replace sidebar nav with MVP items; prune nothing (leave template routes, just unnavigated)
+1. Implement `backend/` package per the specs: uv scaffold + Docker Compose (api + postgres:16) + Alembic `0001_init`
+2. Port the seed generator (`app/seed/rng.py` + `generate.py`) — `tests/test_seed_parity.py` must pass against the pinned W-1014/A-1 values BEFORE anything else renders
+3. Auth feature first (`POST /auth/login`, `GET /auth/me`, `core/security.py`) — then works ledger + dossier bundle behind it
+4. Detector pipeline (5 pure pandas fns + persist + version bump) + `POST /detectors/recompute`; verify queue/geo/notifications flip after recompute
+5. Swap frontend server-fn bodies one call site at a time, keeping the Zod contract test green
 
 ## Open Questions
 
-- DB choice for works/anomalies/evidence (sqlite/postgres/supabase?) and where the anomaly engine lives (server fns vs separate Python service)?
-- Source for India state/district TopoJSON compatible with the d3-geo map pattern?
-- AI provider + model for copilot tool calls (needs structured output + low cost for demo)?
-- eSAKSHI data ingestion: scrape public dashboard now, or stay on hand-built mock for prototype?
-- Auth backend scope: prototype cookie session live on `20260908-auth-shell`; real signed sessions move to the Python backend (per 2026-09-08 answers)?
+- ~~DB choice / where the anomaly engine lives~~ — RESOLVED (ADR-025/026/027: Postgres 16 + FastAPI, engine inside the backend as pandas pipeline + versioned lru_cache)
+- ~~Auth backend scope~~ — RESOLVED (ADR-028: JWT bearer, role-scoped, two endpoints)
+- Source for India state/district TopoJSON compatible with the d3-geo map pattern? (frontend)
+- AI provider + model for copilot tool calls (needs structured output + low cost for demo)? — deferred by design (ADR-025); tool endpoints already provide the substrate
+- eSAKSHI data ingestion: scrape public dashboard now, or stay on hand-built mock for prototype? (feeds WorkIn ingest later)
 
 ## Architecture Decisions
 
