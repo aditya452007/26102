@@ -1,0 +1,24 @@
+"""Money/rounding helpers shared by seed, detectors, and read models.
+
+All money rounding is TS-parity half-up (never Python's banker's round()).
+"""
+
+import math
+from collections.abc import Iterable, Sequence
+from datetime import date
+from statistics import median as _py_median
+
+
+def one_decimal(value: float) -> float:
+    """TS `Math.round(x * 10) / 10` — half-up; all values here are non-negative."""
+    return math.floor(value * 10 + 0.5) / 10
+
+
+def median(values: Iterable[float]) -> float:
+    """Median of a non-empty sequence (callers guarantee non-emptiness)."""
+    seq: Sequence[float] = list(values)
+    return float(_py_median(seq))
+
+
+def stall_days(last_update: date, today: date) -> int:
+    return (today - last_update).days

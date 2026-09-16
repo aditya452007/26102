@@ -90,7 +90,7 @@ sequenceDiagram
     R-->>U: queue with explanations
 ```
 
-### Backend (documented, to build): FastAPI behind the server fns — SPEC in context/backend/
+### Backend (BUILT on 009-backend-foundation): FastAPI behind the server fns
 ```mermaid
 sequenceDiagram
     participant F as TanStack server fn
@@ -115,7 +115,7 @@ frontend spec: `Feature_docs/01-login/backend.md` … `05-ai-copilot/backend.md`
 Do not implement backend endpoints, schemas, or detectors that contradict these files —
 amend them via ADR instead.
 
-### Backend code structure (when built — `structure.md` is the law)
+### Backend code structure (BUILT — `structure.md` is the law)
 ```
 app/features/<feature>/{router,service,repo,schemas}.py   # router → service → repo, one direction
 app/core/{config,security,db}.py   app/common/{errors,pagination,caching}.py
@@ -190,13 +190,13 @@ Extended: KPI strip (sanctioned/spent/progress/stall/flags/labour) + map/tender 
 | `notifications.list` | prefs filter | derived attention items (flags/stalls/UC/overdue) | mock-derived, read-state local |
 | `ai.chat` | message + page context | answer + tool calls | to design (tool layer: getWork, comparePeers, explainFlag, searchWorks) |
 
-### Backend endpoints (documented v1 — full detail in context/backend/api-reference.md)
+### Backend endpoints (BUILT v1 — full detail in context/backend/api-reference.md; 23 routes green under contract tests)
 
 | FastAPI endpoint | Replaces (frontend mock) | Notes |
 |---|---|---|
 | `POST /auth/login` · `/auth/logout` · `GET /auth/me` | prototype cookie session | JWT + RBAC; demo officers ministry/state-mp/district-bhopal |
 | `GET /works` | works ledger mock rows | lens/state/district/type/q/status + sort + pagination; scope in SQL |
-| `GET /works/{id}` · `/works/{id}/dossier` · `/works/{id}/peers` | dossier-data.ts bundle | dossier = work+anomalies+evidence+activity+decision+peers in one call |
+| `GET /works/{id}` · `/works/{id}/dossier` · `/works/{id}/peers` | dossier-data.ts bundle | dossier = work+anomalies+evidence+activity+decision in one call; `peers` is a separate REAL (type, state) n≥8 computation — seed peer stats are demo fiction (ADR-031) |
 | `GET /anomalies` · `GET /anomalies/{id}` | anomalies mock | filters workId/severity/kind; parity-pinned A-1 |
 | `POST /detectors/recompute` | — (new) | ministry only; rules-1.0; replace-in-transaction |
 | `GET/POST /works/{id}/evidence` · `GET /evidence/{id}/file` | evidence mock + localStorage upload | multipart upload; demo rows have no stored file |

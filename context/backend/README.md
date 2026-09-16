@@ -1,8 +1,10 @@
 # NIRIKSHAN-AI Backend — Documentation Index
 
 > Backend for the MPLADS risk-intelligence workspace (SIH26102). Python + FastAPI + Postgres.
-> **Status**: documented, not yet implemented. These specs exist so implementation code and
-> AI agents never invent shapes, formulas, or endpoints — they read them from here.
+> **Status**: BUILT (2026-09-16) — `backend/` implements these specs; 52 tests green incl.
+> parity + contract suites. As-built deltas + laws: `implementation-plan.md` (design contract),
+> ADR-030/031 in `decision.md`. These docs remain the shape-of-truth; code that contradicts
+> them must amend them via ADR.
 >
 > **Doc set** (read in this order):
 > 1. `structure.md` — feature-first layout, controller → service → repository law, Pony ORM
