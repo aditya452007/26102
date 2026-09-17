@@ -1,0 +1,27 @@
+[project]
+name = "nirikshan-backend"
+version = "0.1.0"
+description = "NIRIKSHAN-AI backend — MPLADS risk-intelligence API (FastAPI + Pony + Postgres)"
+requires-python = ">=3.13"
+dependencies = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "pony>=0.7.17",
+    "pandas>=2.2",
+    "python-jose[cryptography]>=3.3",
+    "bcrypt>=4.2",
+    "pydantic-settings>=2.4",
+    "alembic>=1.13",
+    "python-multipart>=0.0.9",
+    "psycopg2-binary>=2.9",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3",
+    "httpx>=0.27",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"

@@ -34,7 +34,15 @@
 ## Decision Index
 
 | ID | Date | Decision | Status | Affects |
-|----|------|----------|--------|---------|
+|----|------|----------|--------|----------|
+| ADR-032 | 2026-09-16 | No db_session yield-dependency (Pony×FastAPI thread-local law): services own their transactions; flush before serializing auto PKs; omit null `note` keys per Zod optional law | Accepted | core/deps.py, all 8 routers, decisions repo/schemas, admin-dashboard/scripts/verify-api-contract.ts |
+| ADR-031 | 2026-09-16 | Peer-statistics honesty: seeded peerN/peerMedianLakh are demo fiction; real peer groups = (type, state) with n≥8; recompute replaces stored flags with honest computation; dossier omits peers block | Accepted | works feature, anomalies engine, api-reference.md §peers, seed-generator.md |
+| ADR-030 | 2026-09-16 | Backend v1 implemented green (52 tests): feature slices, Pony entities with nullable=True law, hand-written Alembic DDL, pandas detector registry, versioned lru_cache; seeder OWNS its transactions — callers never wrap it in db_session | Accepted | backend/**, tests/**, implementation-plan.md |
+| ADR-029 | 2026-09-14 | Feature-first backend specs added per frontend feature (Feature_docs/01–05 backend.md) | Accepted | Feature_docs/01-login/backend.md … 05-ai-copilot/backend.md |
+| ADR-028 | 2026-09-14 | Auth v1: JWT bearer (HS256, 1 h, role+scope claims), no refresh/register/logout endpoints | Accepted | Feature_docs/01-login/backend.md, core/security.py (future) |
+| ADR-027 | 2026-09-14 | Backend stack amended: Pony ORM (sync via threadpool) + pandas analytics + versioned lru_cache (supersedes ADR-025's SQLAlchemy async choice) | Accepted | context/backend/structure.md, analytics-cache.md, README.md, data-model.md |
+| ADR-026 | 2026-09-14 | Backend code structure: feature-first controller→service→repository, one folder per feature | Accepted | context/backend/structure.md |
+| ADR-025 | 2026-09-14 | Backend foundation: FastAPI + Postgres + rule-based detectors, documented in context/backend/ on branch 009-backend-foundation (no ML, no LLM yet; JWT+RBAC; seeded generator port; compute+store detectors; server-fn proxy integration) | Accepted | context/backend/**, future backend/ package, frontend server fns (later) |
 | ADR-024 | 2026-09-09 | Rebrand display to NIRIKSHAN-AI (display-only, copilot→NIRIKSHAN, package.json untouched) | Accepted | app-config, manifest, auth v2 panel, chat, page-assistant, dossier, mock |
 | ADR-023 | 2026-09-08 | Auth shell on branch `20260908-auth-shell`: v2 login/register default (v1→v2 shims), prototype cookie session + dashboard guard, new Notifications + Settings pages | Accepted | auth routes, session store, dashboard shell, sidebar, page-assistant |
 | ADR-017 | 2026-09-07 | Dev-only `agentation@3.0.2` visual-feedback overlay mounted in root shell (NODE_ENV-gated) | Superseded by ADR-018 | package.json, routes/__root.tsx |
@@ -79,7 +87,88 @@
 
 ## Decision Entries
 
-### ADR-024: Rebrand display to NIRIKSHAN-AI — display-only, copilot follows
+### ADR-032: No db_session yield-dependency — services own transactions (Pony × FastAPI concurrency law)
+- **Date**: 2026-09-16
+- **Status**: Accepted
+- **Context**: Live curl verification (`context/backend/api-verification-plan.md`) produced intermittent 500s on concurrent GETs that the sequential pytest suite never reproduced. Uvicorn tracebacks showed Pony's teardown assertion `assert not local.db_context_counter`.
+- **Root cause**: the `unit_of_work` yield-dependency opened `db_session` in dependency code, and FastAPI runs sync dependency enter/exit through `run_in_threadpool` — under concurrent requests the exit can land on a DIFFERENT worker thread than the entry. Pony sessions are thread-local, so the per-thread session counter leaked.
+- **Options considered**: keep the dependency and serialize requests (rejected — defeats the threadpool); switch to async SQLAlchemy (rejected — ADR-027); make each service own its sessions (chosen).
+- **Decision**: Delete `unit_of_work`/`DbSession` entirely. Services wrap Pony access in `with orm.db_session:` blocks, which enter and exit on the calling thread. Recompute keeps its own serializable transaction outside any request session. Two adjacent contract bugs fixed in the same pass: `create_with_activity` now calls `orm.flush()` so auto PKs serialize as real values (decision id was literally `"None"`), and `ActivityOut` OMITS null `note` keys (`activitySchema.note` is Zod `string.optional()` — absent, never null).
+- **Why**: Thread-safety by construction beats thread-safety by discipline; session lifetime == service call, so entities never outlive their session and serialization always happens inside it.
+- **Consequences**: There is no request-wide transaction — a flow calling several services would commit separately (no such flow today). Proven: 52 tests green + 12-simultaneous-request curl hammer all 200 + 0 tracebacks.
+- **Affects**: core/deps.py, all 8 feature routers, decisions/repo.py, decisions/schemas.py, admin-dashboard/scripts/verify-api-contract.ts
+
+### ADR-031: Peer-statistics honesty — seed fiction vs. real computation
+- **Date**: 2026-09-16
+- **Status**: Accepted
+- **Context**: While building the works feature, the dossier/peers contract tests exposed that the TS mock's `peerN: 18` / `peerMedianLakh` values are rng-authored narrative — the generator never computes peer groups. Real type+state peer groups for e.g. W-1014 hold 1 work, and no (type, state) group in the 40-work dataset reaches the n≥8 invariant.
+- **Options considered**: Keep the fiction in the API (rejected — the backend must not lie about what it computed); block seeding of fabricated peer stats (rejected — the frontend dossier renders them today and parity demands the same demo dataset); silently keep both (rejected — undefined behavior once recompute runs).
+- **Decision**: Keep the seed exactly parity-true (fiction included, `detector_version="rules-1.0-seed"`, `detector_inputs={}`). The API is honest going forward: `GET /works/{id}/peers` computes REAL (type, state) stats with the n≥8 invariant; `POST /detectors/recompute` replaces stored flags with real detector output (≈0 flags at demo scale — documented, expected); the dossier response OMITS the `peers` block because no frontend consumer reads computed peers (copilot `comparePeers` reads the stored anomaly's numbers).
+- **Why**: Demo fiction may exist only as clearly versioned seed data; every computed value must come from the documented formulas. Consumers can distinguish seed rows (`rules-1.0-seed`) from real runs (`rules-1.0`).
+- **Consequences**: After a recompute the demo UI shows far fewer flags until a reseed; `mplads-mock.ts`'s invented peer numbers are now documented as demo fiction in seed-generator.md; a future real dataset replaces them naturally.
+- **Affects**: works feature, anomalies engine, api-reference.md §peers, seed-generator.md, tests/test_contract_works.py, tests/test_contract_anomalies.py
+
+### ADR-030: Backend v1 implemented — as-built laws worth remembering
+- **Date**: 2026-09-16
+- **Status**: Accepted
+- **Context**: All work packages (scaffold → data layer → seed parity → auth → works → anomalies engine → writes → read models) are implemented and the full suite is green (52 passed: parity, detectors, auth, works, anomalies, writes, read models contracts).
+- **Options considered**: n/a — record of as-built laws discovered during implementation (this ADR exists so future agents don't rediscover them the hard way).
+- **Decision**: (1) Pony `Optional(str)` silently defaults to `""` unless `nullable=True` is passed — the entities declare it everywhere; explicit `None` kwargs are rejected by this Pony version, so inserters omit them. (2) `insert_demo_data()` OWNS its transactions — wrapping callers in `db_session` nests sessions into one transaction and trips Pony's `CacheIndexError` on truncate+insert; three call sites were fixed to comply. (3) Recompute runs OUTSIDE the request's unit-of-work transaction (its own serializable transaction). (4) Test isolation = autouse fixture force-reseeds after every DB-backed test; officers are upserted (stable UUIDs) so JWT `sub` claims survive reseeds. (5) Alembic migrations are hand-written DDL (no SQLAlchemy metadata exists). (6) Detector math is pure pandas (registry pattern: one file per detector, pipeline owns I/O).
+- **Why**: These are framework-level constraints (Pony/pytest/Docker on Windows) that contradict naive expectations; writing them down prevents regressions by the next agent.
+- **Consequences**: None new — these laws are already encoded in code comments and tests; this ADR is their index.
+- **Affects**: backend/app/seed/insert.py, backend/app/core/db.py, backend/tests/conftest.py, context/backend/implementation-plan.md
+
+### ADR-029: Feature-first backend specs — one backend.md per frontend feature
+- **Date**: 2026-09-14
+- **Status**: Accepted
+- **Context**: The backend doc set in `context/backend/` is endpoint-shaped; implementation agents also need each feature's endpoints IN feature context (what the screen does, why a rule exists), and the user wants docs organized feature-first like the code will be.
+- **Options considered**: Keep everything in context/backend/ (rejected — separates a feature's backend rules from its frontend spec); one mega-spec (rejected — hard to navigate, user asked for feature-first).
+- **Decision**: Each `Feature_docs/NN-*/` gains a `backend.md` alongside its `spec.md`: 01-login (JWT + RBAC), 02-overview (KPIs/geo/queue derivations), 03-works (filter/sort/pagination semantics), 04-work-dossier (bundle + evidence upload + transactional decisions), 05-ai-copilot (4 deterministic tool endpoints, no /ai/chat). These EXTEND `context/backend/` (wire shapes stay in api-reference.md) — they don't replace it.
+- **Why**: An implementation agent reading a feature's folder gets frontend spec + backend contract together; cross-cutting concerns (data model, caching, structure) stay single-sourced in context/backend/ so they can't fork.
+- **Consequences**: A contract change now has up to three homes to sync (mplads-schema.ts, api-reference.md, feature backend.md) — contract tests must fail until all agree.
+- **Affects**: Feature_docs/01–05, context/backend/**
+
+### ADR-028: Auth v1 — JWT bearer, role-scoped, deliberately minimal
+- **Date**: 2026-09-14
+- **Status**: Accepted
+- **Context**: User's bar: "not very strict, but it has to work" — real auth connecting frontend and backend without over-engineering v1. Prototype cookie session (ADR-023) is demo-only.
+- **Options considered**: Keep prototype cookie session (rejected — user chose JWT); JWT + refresh token (rejected — more endpoints than the bar requires); strict MFA/officer-portal integration (rejected — out of demo scope).
+- **Decision**: `POST /auth/login` (bcrypt check → HS256 JWT, 1 h, claims sub/email/role/state_scope/district_scope) + `GET /auth/me`. No /register, /refresh, /logout endpoints (logout = client discards token). Three seeded demo officers (ministry / state-MP / district-Bhopal), password `demo1234`. Scoping enforced in repo queries from token claims, writes 403 out-of-scope, recompute ministry-only; reads 404 out-of-scope ids. Header role-switcher stays a view lens; token role is the authorization ceiling.
+- **Why**: Bearer JWT is one dependency (`python-jose`), works for both server-fn proxy and future API clients, and makes the existing district/state/ministry lens real authorization with one `scope_of()` helper; deferring refresh keeps v1 at two endpoints.
+- **Consequences**: Token expiry forces re-login after 1 h (acceptable v1); httpOnly-cookie transport can be adopted later without claim changes; multi-district officers need a future join table (data-model.md note).
+- **Affects**: Feature_docs/01-login/backend.md, context/backend/README.md, future core/security.py
+
+### ADR-027: Analytics engine = pandas + versioned lru_cache; Pony ORM for data access
+- **Date**: 2026-09-14
+- **Status**: Accepted
+- **Context**: User asked for the analytics computation/caching approach, a "minimum lines of code" data layer, and named "ponytail" — clarified to **Pony ORM**.
+- **Options considered**: Polars (rejected — overkill for thousands of rows); pure stdlib (rejected — more hand-rolled code, against the minimum-lines goal); SQLAlchemy async (superseded — more session boilerplate than Pony's generator-expression queries); Redis/cachetools (rejected — extra deps; a ~30-line lru_cache decorator covers v1); Postgres-stored rollups (rejected — second write path to keep in sync).
+- **Decision**: Detector math is pure pandas functions (no I/O inside); the pipeline loads DataFrames via Pony, runs detectors, persists anomalies+signals in one transaction, then bumps an analytics version. Read models (geo rollup, queue, KPI, notifications, peer comparison) are cached with a `@cached(version, ttl)` lru_cache decorator — version bump invalidates everything at once, TTL 300 s covers drift. Pony ORM is sync; FastAPI handlers are plain `def` (threadpool) — no async anywhere in v1.
+- **Why**: 3–4 chained pandas calls replace 3× the SQL window-function lines and unit-test without a DB; the versioned key gives correctness (bump on write) and liveness (TTL) with zero cache-library dependencies; Pony's generator expressions are the fewest-lines query syntax the user asked for, and Pony `select`/`page`/`count` eliminate pagination boilerplate.
+- **Consequences**: Cache is per-worker (bounded by version+TTL — correct, revisit only for cross-worker coherence needs); Pony's sync engine requires the plain-`def` handler discipline (an `async def` route is a structure violation); banking-rounding law from seed-generator.md applies to detector math too.
+- **Affects**: context/backend/structure.md, analytics-cache.md, README.md, data-model.md; supersedes the SQLAlchemy row of ADR-025
+
+### ADR-026: Backend code structure — feature-first controller→service→repository
+- **Date**: 2026-09-14
+- **Status**: Accepted
+- **Context**: User chose a modern service/repository/controller structure, feature-first, and simple enough to never clutter.
+- **Options considered**: Layer-first layout (rejected — one feature's code scattered across four trees; user explicitly chose feature-first); repository-per-entity abstractions/interfaces (rejected — Java-style ceremony, more lines); putting detectors inside the anomalies feature service (rejected — engine gets its own package with pure pandas fns).
+- **Decision**: `app/features/<feature>/{router,service,repo,schemas}.py` — routers ≤15 lines calling exactly one service fn; services take/return Pydantic models (never Pony entities); repos are the ONLY Pony-speaking layer; entities live in `core/db.py` (Pony needs one binding); shared code only in `core/`+`common/`; cross-feature reads go through explicitly exported repo functions. Anti-patterns banned: `select(` outside repo, HTTP codes in services, `async def` routes in v1.
+- **Why**: Add/remove a feature = add/remove one folder; the layer law keeps responses' contract in schemas and business logic testable without a DB; matches the repo's existing feature-first frontend convention.
+- **Consequences**: Small cross-feature import discipline to maintain (exported repo lists); Pony entities concentrated in one file by framework constraint, which slightly bends feature purity (documented, accepted).
+- **Affects**: context/backend/structure.md, future backend/app/**
+
+### ADR-025: Backend foundation documented in context/backend/ before any code
+- **Date**: 2026-09-14
+- **Status**: Accepted
+- **Context**: Frontend is complete on mock data (SPEC 00–05 + 006–008); it is time for the real backend. User set the frame: Python FastAPI, Postgres, an analytics engine (rule-based, not ML), no LLM integration yet, and API documentation FIRST so implementation agents cannot hallucinate shapes or formulas. User answered six scoping questions (2026-09-14).
+- **Options considered**: Doc format — OpenAPI-first or single spec file (rejected — user chose a Feature_docs-style doc set under context/backend/); auth — defer or minimal session (rejected — JWT + district/state/ministry RBAC chosen, making the frontend's role lens real authorization); seed — static JSON fixture or fresh ingest (rejected — porting the mulberry32 generator to Python keeps the demo byte-identical, making the mock→real swap seamless); detectors — live SQL on every request (rejected — heavier) or background job queue (rejected — extra infra) — compute+store at ingest chosen; stack — sync/pip (rejected) — async SQLAlchemy 2.0 + uv + Docker Compose chosen; client integration — browser-direct with CORS (rejected) — server fns proxy FastAPI server-side, preserving SSR and the one-line swap law.
+- **Decision**: Document the full backend in `context/backend/` (README + data-model + api-reference + anomaly-engine + seed-generator) on branch `009-backend-foundation` before any code. Stack: FastAPI async + Pydantic v2 + SQLAlchemy 2.0 async/asyncpg + Alembic + JWT (httpOnly cookie + bearer) + pytest + uv + Docker Compose (Postgres 16). Five rule-based detectors (cost outlier, delay/stall, near-duplicate, expenditure pattern, utilisation/UC) compute+store at ingest with peer stats and audit trail (`detector_inputs` JSONB, `detector_version`). AI: NO ML, NO LLM in v1 — the copilot tools (searchWorks/getWork/comparePeers/explainFlag/listEvidence) are plain REST endpoints so an LLM can slot behind them later.
+- **Why**: Documentation-first turns the "AI won't hallucinate" requirement into testable artifacts — pinned JSON examples, exact detector formulas with severity bands, a verified mulberry32 port (test vectors proven identical to the TS original to 10 decimals), and a parity test that fails if Python seed ≠ frontend mock. The mock-behind-contract law (ADR-006/007) survives: server fns keep their signatures, only bodies change.
+- **Consequences**: `context/backend/` is now the backend source of truth — implementation must match it or amend it via ADR. Anomaly ids are not stable across recompute (frontend never persists them — verified). KPI endpoint serves scheme-snapshot constants until real ingest. The `/ai/chat` endpoint is explicitly deferred; copilot tool endpoints are its stable substrate. Python parities verified headless on 2026-09-14 (Node + Python 3.13).
+- **Affects**: context/backend/**, branch 009-backend-foundation, future backend/ package, future src/server/mplads/* bodies (not yet), decision.md/flow.md/progress-tracker.md
+
+### ADR-024: Rebrand display to NIRIKSHAN-AI (display-only, copilot→NIRIKSHAN)
 - **Date**: 2026-09-09
 - **Status**: Accepted
 - **Context**: Home/sidebar still showed template "Admin Dashboard"; jury demo needs proper NIRIKSHAN-AI naming. User chose exact spelling NIRIKSHAN-AI, display-only scope, and Sentinel→NIRIKSHAN rename.

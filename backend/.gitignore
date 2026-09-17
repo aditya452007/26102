@@ -1,0 +1,6 @@
+# Runtime artifacts — never commit
+.run/
+uploads/
+__pycache__/
+*.pyc
+.venv/
