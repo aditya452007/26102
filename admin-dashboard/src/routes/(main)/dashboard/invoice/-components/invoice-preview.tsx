@@ -6,7 +6,6 @@ import { Button } from "@/components/ui/button";
 
 import { INVOICE_PAPER_HEIGHT, INVOICE_PAPER_SCALE, INVOICE_PAPER_WIDTH, type UCFormValues } from "./data";
 import { InvoicePaper } from "./invoice-paper";
-import { PrintInvoice } from "./print-invoice";
 import { useVisibleCenterPosition } from "./use-visible-center-position";
 
 function handlePrint() {
@@ -22,9 +21,7 @@ export function InvoicePreview({ invoice }: { invoice: UCFormValues }) {
   });
 
   return (
-    <>
-      <PrintInvoice invoice={invoice} />
-      <div className="flex flex-col rounded-xl border bg-card">
+    <div className="flex flex-col rounded-xl border bg-card">
         <div className="flex items-center justify-between px-4 py-4">
           <h2 className="font-medium text-lg">Preview</h2>
           <Button type="button" variant="outline" onClick={handlePrint}>
@@ -63,6 +60,5 @@ export function InvoicePreview({ invoice }: { invoice: UCFormValues }) {
           </div>
         </div>
       </div>
-    </>
   );
 }
