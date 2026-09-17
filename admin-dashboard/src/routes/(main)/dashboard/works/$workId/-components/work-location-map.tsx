@@ -11,18 +11,20 @@ import {
 } from "@vnedyalk0v/react19-simple-maps";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  buildDistrictRiskIndex,
+  districtKey,
+  INDIA_DISTRICTS_GEO,
+  INDIA_STATES_GEO,
+  mapColorFor,
+} from "@/data/india-geo";
 import type { Work } from "@/lib/mplads-schema";
+import { anomalies, works } from "@/lib/mplads-mock";
 
-import indiaStates from "./india-states.json";
+const MAP_CENTER = createCoordinates(82.8, 22.75);
+const MAP_SCALE = 648.81;
 
-type StatesGeoJson = {
-  type: "FeatureCollection";
-  features: { type: "Feature"; properties: { name?: string }; geometry: GeoJSON.Geometry }[];
-};
-
-const INDIA_GEO = indiaStates as unknown as StatesGeoJson;
-const MAP_CENTER = createCoordinates(82.06, 21.85);
-const MAP_SCALE = 680.42;
+const DISTRICT_RISK = buildDistrictRiskIndex(works, anomalies);
 
 interface WorkLocationMapProps {
   work: Work;
@@ -49,31 +51,49 @@ export function WorkLocationMap({ work }: WorkLocationMapProps) {
           >
             <Sphere className="fill-[#d4dadc] dark:fill-[#2C353C]" />
             <ZoomableGroup center={MAP_CENTER} zoom={1} minZoom={1} maxZoom={4}>
-              <Geographies geography={INDIA_GEO}>
+              <Geographies geography={INDIA_DISTRICTS_GEO}>
                 {({ geographies }) =>
-                  geographies.map((geo) => {
-                    const name = (geo.properties as { name?: string } | null)?.name ?? "Unknown";
-                    const isHome = name === work.state;
+                  geographies.map((geo, index) => {
+                    const props = (geo.properties ?? {}) as { district?: string; st_nm?: string };
+                    const key = districtKey(props);
+                    const isHome = props.district === work.district && props.st_nm === work.state;
+                    const risk = DISTRICT_RISK.get(props.district ?? "");
+                    const fill = mapColorFor(risk?.high ?? 0, risk?.works ?? 0);
                     return (
                       <Geography
-                        key={name}
+                        key={`${key}-${index}`}
                         geography={geo}
                         style={{
-                          default: {
-                            fill: isHome ? "color-mix(in oklch, var(--primary) 25%, transparent)" : "var(--muted)",
-                            outline: "none",
-                          },
+                          default: { fill, outline: "none" },
                           hover: {
-                            fill: isHome ? "color-mix(in oklch, var(--primary) 35%, transparent)" : "var(--muted)",
+                            fill: `color-mix(in oklch, ${fill} 85%, var(--foreground))`,
                             outline: "none",
                           },
                           pressed: { outline: "none" },
                         }}
                         stroke={isHome ? "var(--primary)" : "var(--border)"}
-                        strokeWidth={isHome ? 1.5 : 0.5}
+                        strokeWidth={isHome ? 1.4 : 0.25}
                       />
                     );
                   })
+                }
+              </Geographies>
+              <Geographies geography={INDIA_STATES_GEO}>
+                {({ geographies }) =>
+                  geographies.map((geo, index) => (
+                    <Geography
+                      key={`state-outline-${index}`}
+                      geography={geo}
+                      style={{
+                        default: { fill: "transparent", outline: "none", pointerEvents: "none" },
+                        hover: { fill: "transparent", outline: "none", pointerEvents: "none" },
+                        pressed: { fill: "transparent", outline: "none", pointerEvents: "none" },
+                      }}
+                      stroke="var(--foreground)"
+                      strokeOpacity={0.35}
+                      strokeWidth={0.8}
+                    />
+                  ))
                 }
               </Geographies>
               <Marker coordinates={[createLongitude(work.lon), createLatitude(work.lat)]}>

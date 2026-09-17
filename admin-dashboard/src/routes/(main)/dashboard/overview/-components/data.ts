@@ -52,29 +52,33 @@ export function topQueue(scoped: Work[]): QueueRow[] {
     .slice(0, 8);
 }
 
-export interface StateSlice {
-  state: string;
+export interface DistrictSlice {
+  district: string;
   works: number;
   high: number;
 }
 
-export function scopedGeo(scoped: Work[]): StateSlice[] {
+export function scopedDistrictGeo(scoped: Work[]): DistrictSlice[] {
   const highByWork = new Set(anomalies.filter((a) => a.severity === "high").map((a) => a.workId));
-  const byState = new Map<string, StateSlice>();
+  const byDistrict = new Map<string, DistrictSlice>();
   for (const work of scoped) {
-    const entry = byState.get(work.state) ?? { state: work.state, works: 0, high: 0 };
+    const entry = byDistrict.get(work.district) ?? { district: work.district, works: 0, high: 0 };
     entry.works += 1;
     if (highByWork.has(work.id)) {
       entry.high += 1;
     }
-    byState.set(work.state, entry);
+    byDistrict.set(work.district, entry);
   }
-  return [...byState.values()].sort((a, b) => a.state.localeCompare(b.state));
+  return [...byDistrict.values()].sort((a, b) => a.district.localeCompare(b.district));
 }
 
-export function getOverviewData(role: OfficerRole, selectedState: string): { queue: QueueRow[]; geo: StateSlice[] } {
+export function getOverviewData(
+  role: OfficerRole,
+  selectedDistrict: string,
+): { queue: QueueRow[]; geo: DistrictSlice[] } {
   const scoped = scopeWorks(role);
-  const inScope = selectedState && scoped.some((work) => work.state === selectedState) ? selectedState : "";
-  const visible = inScope ? scoped.filter((work) => work.state === inScope) : scoped;
-  return { queue: topQueue(visible), geo: scopedGeo(scoped) };
+  const inScope =
+    selectedDistrict && scoped.some((work) => work.district === selectedDistrict) ? selectedDistrict : "";
+  const visible = inScope ? scoped.filter((work) => work.district === inScope) : scoped;
+  return { queue: topQueue(visible), geo: scopedDistrictGeo(scoped) };
 }
