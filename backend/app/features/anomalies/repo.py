@@ -67,7 +67,7 @@ def work_summary(work: Work) -> dict:
         "title": work.title,
         "district": work.district,
         "state": work.state,
-        "sanctioned_lakh": float(work.sanctioned_lakh),
+        "sanctioned_rs": int(work.sanctioned_rs),
         "progress_pct": work.progress_pct,
     }
 

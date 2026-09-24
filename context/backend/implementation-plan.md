@@ -92,10 +92,10 @@ upload: `file: UploadFile` + `kind: EvidenceKind`.
 1. **camelCase wire, snake_case code.** All response models inherit `CamelModel`
    (`alias_generator=to_camel, populate_by_name=True`); FastAPI serializes
    `response_model` by alias by default. One base, zero per-field `Field(alias=…)`.
-2. **Money is float lakhs, dates are `yyyy-MM-dd` strings, timestamps are ISO-8601
+2. **Money is integer rupees, dates are `yyyy-MM-dd` strings, timestamps are ISO-8601
    UTC ending in `Z`** (`.000Z` style). `date` fields serialize correctly natively;
-   datetimes get a shared `field_serializer` in `CamelModel`. Decimals convert to
-   `float` in `*Out` schemas (frontend numbers).
+   datetimes get a shared `field_serializer` in `CamelModel`. Money converts to
+   `int` in `*Out` schemas (frontend numbers).
 3. **Envelopes** (api-reference.md §pagination): works ledger → `Page[WorkOut]`
    (`items/total/page/pageSize`); every other list → `ItemsOut[T]` (`items/total`).
 4. **Errors**: `{"detail": "…"}` only — `AppError` subclasses carry status + message;
@@ -153,7 +153,7 @@ Dependencies pinned via `uv.lock` (SCA gate); `pip-audit`/`uv audit` run before 
 |---|---|---|---|
 | WP0 | Scaffold | pyproject, uv.lock, .env.example, main.py, core/config, common/errors+schemas+pagination, Dockerfile, compose, /healthz | `uv run uvicorn` boots; `/healthz` 200; `uv run pytest` collects |
 | WP1 | Data layer | core/db.py (7 entities), alembic 0001_init, compose postgres up | `alembic upgrade head` creates tables |
-| WP2 | Seed port | seed/rng.py, generate.py, insert.py, test_seed_parity.py, fixture | parity test green: 40 works/12 anomalies/6 evidence/33 activities byte-deep vs TS fixture |
+| WP2 | Seed port | seed/rng.py, generate.py, insert.py, test_seed_parity.py, fixture | parity test green: 144 works/24 anomalies/6 evidence/65 activities byte-deep vs TS fixture |
 | WP3 | Auth | core/security, core/deps, features/auth/*, officers in seed | login → token → /auth/me; 401 bad creds; district officer 403 out-of-scope write |
 | WP4 | Works | features/works/* | GET /works matches lens/sort/page contract; dossier one-call bundle; peers table |
 | WP5 | Engine | features/anomalies/* + engine/* | 5 detectors unit-tested vs formulas; recompute replaces in tx + bumps version; A-1 pinned strings |

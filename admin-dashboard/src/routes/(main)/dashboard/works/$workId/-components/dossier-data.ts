@@ -121,7 +121,7 @@ export function getDossier(workId: string): Dossier | undefined {
   const evidence = evidences.filter((item) => item.workId === workId);
   const activity = activities.filter((item) => item.workId === workId).sort((a, b) => (a.at < b.at ? 1 : -1));
   const stallDays = differenceInCalendarDays(parseDay(DEMO_TODAY_ISO), parseDay(work.lastUpdate));
-  const utilisationPct = work.sanctionedLakh > 0 ? (work.expenditureLakh / work.sanctionedLakh) * 100 : 0;
+  const utilisationPct = work.sanctionedRs > 0 ? (work.expenditureRs / work.sanctionedRs) * 100 : 0;
   return { work, flags, evidence, activity, stallDays, utilisationPct };
 }
 
@@ -143,22 +143,22 @@ function oneDecimal(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
-export function spendSeries(work: Work, peerMedianLakh: number | null): { data: SpendPoint[]; peerLabel: string } {
+export function spendSeries(work: Work, peerMedianRs: number | null): { data: SpendPoint[]; peerLabel: string } {
   const seed = seedOf(work.id);
   const [year, month] = work.sanctionDate.split("-").map(Number);
   const raw: number[] = [];
   for (let index = 0; index < 12; index += 1) {
     const wiggle = 1 + 0.06 * Math.sin(seed + index * 1.7);
-    raw.push(Math.max(work.expenditureLakh * ((index + 1) / 12) ** 0.92 * wiggle, 0));
+    raw.push(Math.max(work.expenditureRs * ((index + 1) / 12) ** 0.92 * wiggle, 0));
   }
-  const scale = raw[11] > 0 ? work.expenditureLakh / raw[11] : 0;
-  const peerTotal = peerMedianLakh ?? work.sanctionedLakh;
+  const scale = raw[11] > 0 ? work.expenditureRs / raw[11] : 0;
+  const peerTotal = peerMedianRs ?? work.sanctionedRs;
   const data = raw.map((value, index) => ({
     month: format(new Date(year, month - 1 + index, 1), "MMM yy"),
     peer: oneDecimal((peerTotal * (index + 1)) / 12),
     spent: oneDecimal(value * scale),
   }));
-  return { data, peerLabel: peerMedianLakh === null ? "Sanctioned plan" : "Peer median" };
+  return { data, peerLabel: peerMedianRs === null ? "Sanctioned plan" : "Peer median" };
 }
 
 export interface Milestone {

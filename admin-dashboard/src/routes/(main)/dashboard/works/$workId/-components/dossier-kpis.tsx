@@ -1,5 +1,5 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { formatLakh } from "@/lib/mplads-mock";
+import { formatMoneyRs } from "@/lib/mplads-mock";
 import type { Work } from "@/lib/mplads-schema";
 
 interface DossierKpisProps {
@@ -27,8 +27,8 @@ export function DossierKpis({ work, stallDays, utilisationPct, flagCount }: Doss
   return (
     <div className="overflow-hidden rounded-xl bg-card ring-1 ring-foreground/10">
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-12">
-        <Kpi label="Sanctioned" value={formatLakh(work.sanctionedLakh)} sub={`#${work.id} sanction`} />
-        <Kpi label="Spent" value={formatLakh(work.expenditureLakh)} sub={`${utilisationPct.toFixed(0)}% utilisation`} />
+        <Kpi label="Sanctioned" value={formatMoneyRs(work.sanctionedRs)} sub={`#${work.id} sanction`} />
+        <Kpi label="Spent" value={formatMoneyRs(work.expenditureRs)} sub={`${utilisationPct.toFixed(0)}% utilisation`} />
         <Kpi label="Progress" value={`${work.progressPct}%`} sub={work.status.replace("-", " ")} />
         <Kpi
           label="Stalled"

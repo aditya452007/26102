@@ -10,7 +10,7 @@ export interface WorkRow {
   type: Work["type"];
   district: string;
   state: string;
-  sanctionedLakh: number;
+  sanctionedRs: number;
   progressPct: number;
   status: Work["status"];
   lastUpdate: string;
@@ -57,7 +57,7 @@ export function buildWorksRows(role: OfficerRole): WorkRow[] {
         type: work.type,
         district: work.district,
         state: work.state,
-        sanctionedLakh: work.sanctionedLakh,
+        sanctionedRs: work.sanctionedRs,
         progressPct: work.progressPct,
         status: work.status,
         lastUpdate: work.lastUpdate,
@@ -66,7 +66,7 @@ export function buildWorksRows(role: OfficerRole): WorkRow[] {
         search: `${work.id} ${work.title} ${work.agency}`.toLowerCase(),
       } satisfies WorkRow;
     })
-    .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.sanctionedLakh - a.sanctionedLakh);
+    .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.sanctionedRs - a.sanctionedRs);
 }
 
 export function filterByLens(rows: WorkRow[], lens: Lens): WorkRow[] {

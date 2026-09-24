@@ -11,8 +11,8 @@
 ```jsonc
 // 200 — KpisOut (scheme snapshot, constant until real ingest)
 {
-  "totalWorks": 12482, "underExecution": 4821, "delayed": 386,
-  "highRisk": 73, "overrunExposureLakh": 41,
+  "totalWorks": 28410, "underExecution": 9120, "delayed": 1140,
+  "highRisk": 214, "overrunExposureRs": 1284000000,
   "source": "scheme-snapshot"      // tells the frontend to caption honestly
 }
 ```
@@ -51,7 +51,7 @@ seed parity test.
   { "workId": "W-1014",
     "title": "Community Hall Construction",
     "district": "Bhopal", "state": "Madhya Pradesh",
-    "sanctionedLakh": 58.9,
+    "sanctionedRs": 19000000,
     "severity": "high",                  // max severity among the work's anomalies
     "reason": "Cost 2.4× peer median · stalled 96 days",   // template, anomaly-engine.md
     "anomalyId": "A-1" }                 // top anomaly driving the row

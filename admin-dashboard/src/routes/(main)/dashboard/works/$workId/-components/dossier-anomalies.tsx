@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
-import { compareSentence, formatLakh } from "@/lib/mplads-mock";
+import { compareSentence, formatMoneyRs } from "@/lib/mplads-mock";
 import type { Anomaly, Work } from "@/lib/mplads-schema";
 
 import { type DossierTab, SEVERITY_BAR, SEVERITY_DOT, SEVERITY_STYLES, TYPE_LABELS } from "./dossier-data";
@@ -62,7 +62,7 @@ function PeerBar({ actual, median, severity }: { actual: number; median: number;
       <div
         className="relative h-3 rounded-full bg-muted"
         role="img"
-        aria-label={`Actual ${formatLakh(actual)} against peer median ${formatLakh(median)}`}
+        aria-label={`Actual ${formatMoneyRs(actual)} against peer median ${formatMoneyRs(median)}`}
       >
         <div
           className={`h-full rounded-full ${SEVERITY_BAR[severity]}`}
@@ -76,10 +76,10 @@ function PeerBar({ actual, median, severity }: { actual: number; median: number;
       </div>
       <div className="flex justify-between text-muted-foreground text-xs">
         <span>
-          Peer median <span className="font-medium text-foreground tabular-nums">{formatLakh(median)}</span>
+          Peer median <span className="font-medium text-foreground tabular-nums">{formatMoneyRs(median)}</span>
         </span>
         <span>
-          This work <span className="font-medium text-foreground tabular-nums">{formatLakh(actual)}</span>
+          This work <span className="font-medium text-foreground tabular-nums">{formatMoneyRs(actual)}</span>
         </span>
       </div>
     </div>
@@ -87,14 +87,14 @@ function PeerBar({ actual, median, severity }: { actual: number; median: number;
 }
 
 function PeerTable({ flag, work }: { flag: Anomaly; work: Work }) {
-  if (flag.actualLakh === null || flag.peerMedianLakh === null) {
+  if (flag.actualRs === null || flag.peerMedianRs === null) {
     return null;
   }
-  const ratio = flag.peerMedianLakh > 0 ? (flag.actualLakh / flag.peerMedianLakh).toFixed(1) : "—";
+  const ratio = flag.peerMedianRs > 0 ? (flag.actualRs / flag.peerMedianRs).toFixed(1) : "—";
   const rows: Array<[string, string]> = [
     ["Peer group", `${flag.peerN} similar ${TYPE_LABELS[work.type].toLowerCase()} works in ${work.district}`],
-    ["Peer median", formatLakh(flag.peerMedianLakh)],
-    ["This work", formatLakh(flag.actualLakh)],
+    ["Peer median", formatMoneyRs(flag.peerMedianRs)],
+    ["This work", formatMoneyRs(flag.actualRs)],
     ["Deviation", `${ratio}× the median`],
   ];
   return (
@@ -136,7 +136,7 @@ export function DossierAnomalies({ work, flags, evidenceCount, ucPending, onGoTa
   return (
     <div className="flex flex-col gap-4 py-4">
       {flags.map((flag) => {
-        const hasNumbers = flag.actualLakh !== null && flag.peerMedianLakh !== null;
+        const hasNumbers = flag.actualRs !== null && flag.peerMedianRs !== null;
         return (
           <Card key={flag.id} className={`border-l-4 ${SEVERITY_BORDER[flag.severity]}`}>
             <CardHeader>
@@ -160,25 +160,25 @@ export function DossierAnomalies({ work, flags, evidenceCount, ucPending, onGoTa
                   <>
                     <p className="text-2xl tabular-nums">
                       <span className={flag.severity === "high" ? "text-destructive" : "text-foreground"}>
-                        {formatLakh(flag.actualLakh as number)}
+                        {formatMoneyRs(flag.actualRs as number)}
                       </span>
                       <span className="text-muted-foreground">
                         {" "}
-                        vs {formatLakh(flag.peerMedianLakh as number)} median
+                        vs {formatMoneyRs(flag.peerMedianRs as number)} median
                       </span>
                     </p>
                     <p className="text-muted-foreground text-sm">
                       {compareSentence(
-                        flag.actualLakh as number,
-                        flag.peerMedianLakh as number,
+                        flag.actualRs as number,
+                        flag.peerMedianRs as number,
                         flag.peerN,
                         work.type,
                         work.district,
                       )}
                     </p>
                     <PeerBar
-                      actual={flag.actualLakh as number}
-                      median={flag.peerMedianLakh as number}
+                      actual={flag.actualRs as number}
+                      median={flag.peerMedianRs as number}
                       severity={flag.severity}
                     />
                   </>

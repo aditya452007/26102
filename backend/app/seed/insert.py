@@ -100,8 +100,8 @@ def _insert_all(data: dict) -> int:
             district=w["district"],
             agency=w["agency"],
             status=w["status"],
-            sanctioned_lakh=_dec(w["sanctionedLakh"]),
-            expenditure_lakh=_dec(w["expenditureLakh"]),
+            sanctioned_rs=w["sanctionedRs"],
+            expenditure_rs=w["expenditureRs"],
             progress_pct=w["progressPct"],
             sanction_date=datetime.strptime(w["sanctionDate"], "%Y-%m-%d").date(),
             due_date=datetime.strptime(w["dueDate"], "%Y-%m-%d").date(),
@@ -113,7 +113,7 @@ def _insert_all(data: dict) -> int:
             department=w["department"],
             labour_deployed=w["labourDeployed"],
             demanded_days=w["demandedDays"],
-            returned_lakh=_dec(w["returnedLakh"]),
+            returned_rs=w["returnedRs"],
         )
 
     for a in data["anomalies"]:
@@ -125,8 +125,8 @@ def _insert_all(data: dict) -> int:
                 "severity": a["severity"],
                 "headline": a["headline"],
                 "peer_n": a["peerN"],
-                "peer_median_lakh": _dec(a["peerMedianLakh"]),
-                "actual_lakh": _dec(a["actualLakh"]),
+                "peer_median_rs": a["peerMedianRs"],
+                "actual_rs": a["actualRs"],
                 "unit": a["unit"],
                 "corroboration": a["corroboration"],
                 "detector_version": DETECTOR_VERSION_SEED,

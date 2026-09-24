@@ -12,7 +12,7 @@ import pandas as pd
 from pony import orm
 
 from app.common.caching import bump_version
-from app.common.mathutil import one_decimal
+from app.common.mathutil import round_10k
 from app.core.db import Activity, Anomaly, AnomalySignal, Work
 from app.features.anomalies.engine import (
     cost,
@@ -46,8 +46,8 @@ def load_frames() -> Frames:
                 "state": w.state,
                 "district": w.district,
                 "status": w.status,
-                "sanctioned_lakh": float(w.sanctioned_lakh),
-                "expenditure_lakh": float(w.expenditure_lakh),
+                "sanctioned_rs": int(w.sanctioned_rs),
+                "expenditure_rs": int(w.expenditure_rs),
                 "progress_pct": w.progress_pct,
                 "last_update": w.last_update,
                 "due_date": w.due_date,
@@ -57,8 +57,8 @@ def load_frames() -> Frames:
     df = pd.DataFrame(rows)
     if df.empty:
         return Frames(works=pd.DataFrame(columns=[
-            "title", "type", "state", "district", "status", "sanctioned_lakh",
-            "expenditure_lakh", "progress_pct", "last_update", "due_date",
+            "title", "type", "state", "district", "status", "sanctioned_rs",
+            "expenditure_rs", "progress_pct", "last_update", "due_date",
         ]).set_index(pd.Index([], name="id")))
     return Frames(works=df.set_index("id"))
 
@@ -95,14 +95,14 @@ def persist(found: list[dict], actor: str = "NIRIKSHAN engine") -> int:
                 severity=flag["severity"],
                 headline=flag["headline"],
                 peer_n=flag["peer_n"],
-                peer_median_lakh=(
-                    None if flag["peer_median_lakh"] is None
-                    else one_decimal(flag["peer_median_lakh"])
+                peer_median_rs=(
+                    None if flag["peer_median_rs"] is None
+                    else round_10k(flag["peer_median_rs"])
                 ),
-                actual_lakh=(
-                    None if flag["actual_lakh"] is None else one_decimal(flag["actual_lakh"])
+                actual_rs=(
+                    None if flag["actual_rs"] is None else round_10k(flag["actual_rs"])
                 ),
-                unit="₹L",
+                unit="₹",
                 corroboration=flag["corroboration"],
                 detector_version=DETECTOR_VERSION,
                 detector_inputs=flag["detector_inputs"],

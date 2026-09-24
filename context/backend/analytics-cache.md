@@ -69,12 +69,12 @@ def run(session, today: date) -> PipelineReport:
 
 # features/anomalies/engine/cost.py — detector fns are one-liners over pandas
 def peer_stats(works: pd.DataFrame) -> pd.DataFrame:
-    return (works.groupby(["type", "state"])["sanctioned_lakh"]
+    return (works.groupby(["type", "state"])["sanctioned_rs"]
                  .agg(peer_n="count", median="median").reset_index())
 
 def cost_flags(works: pd.DataFrame, stats: pd.DataFrame, today: date) -> pd.DataFrame:
     j = works.merge(stats, on=["type", "state"])
-    j["ratio"] = j.sanctioned_lakh / j.median
+    j["ratio"] = j.sanctioned_rs / j.median
     return j[(j.peer_n >= MIN_PEERS) & (j.ratio >= 1.4)]        # thresholds → anomaly-engine.md
 ```
 
@@ -84,8 +84,9 @@ cannot be unit-tested without a DB. Postgres stays the *store*; pandas is the *c
 Scale note: the dataset is thousands of rows — one process, one DataFrame load, sub-100 ms
 compute. No Spark, no Celery, no workers for v1.
 
-Rounding: all money halves-up (TS parity — `seed-generator.md` documents the `Decimal` +
-`ROUND_HALF_UP` helper; reuse it here, never Python's banker's `round`).
+Rounding: all money halves-up to the nearest ₹10k (`round_10k` in `common/mathutil.py`,
+TS `Math.round(x/10000)*10000` — the rupee mirror of the old 0.1L precision; never Python's
+banker's `round`).
 
 ---
 
@@ -93,15 +94,15 @@ Rounding: all money halves-up (TS parity — `seed-generator.md` documents the `
 
 Persisted shape is exactly `data-model.md §anomalies` — no analytics-specific tables:
 
-- One `anomalies` row per flag: `kind`, `severity`, `headline`, `peer_n`, `peer_median_lakh`,
-  `actual_lakh`, `unit='₹L'`, `corroboration`, `detector_version`, `detector_inputs` (JSONB:
+- One `anomalies` row per flag: `kind`, `severity`, `headline`, `peer_n`, `peer_median_rs`,
+  `actual_rs`, `unit='₹'`, `corroboration`, `detector_version`, `detector_inputs` (JSONB:
   every formula input at detection time — the audit trail the dossier renders).
 - `anomaly_signals` rows (ordered `position`) — the corroboration chips.
 - **Replace-in-transaction recompute**: `DELETE FROM anomalies WHERE detector_version = old`
   then insert the new set, inside one `db_session(serialized=True)`. `POST
   /detectors/recompute` (api-reference.md) is the only entry point; a recompute failure leaves
   the previous generation untouched.
-- IDs: seed generator pins `A-1…A-12`; recompute runs allocate `A-{max+1}` upward. The
+- IDs: seed generator pins `A-1…A-24`; recompute runs allocate `A-{max+1}` upward. The
   `detector_version` column makes any historical generation attributable.
 - **No duplicate storage of derived rollups.** Geo rollup, KPI tuples, queue, notification
   feed are *not* tables — they are cached read models (§4) computed from base tables on

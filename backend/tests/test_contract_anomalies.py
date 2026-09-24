@@ -15,23 +15,23 @@ def test_list_shape_and_seed_total(client, ministry_token):
     assert r.status_code == 200
     body = r.json()
     assert set(body) == {"items", "total"}
-    assert body["total"] == 12
+    assert body["total"] == 24
     a = body["items"][0]  # ordered high→medium→low: A-1 first
     assert a["id"] == "A-1"
     assert set(a) == {
         "id", "workId", "kind", "severity", "headline", "peerN",
-        "peerMedianLakh", "actualLakh", "unit", "corroboration", "signals",
+        "peerMedianRs", "actualRs", "unit", "corroboration", "signals",
     }
     assert a["signals"][0]["value"] == (
-        "₹58.9L vs ₹24.6L median across 18 similar community-hall works in Bhopal"
+        "₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal"
     )
 
 
 def test_list_filters(client, ministry_token):
     r = client.get("/api/v1/anomalies?severity=high", headers=auth(ministry_token))
-    assert r.json()["total"] == 5
+    assert r.json()["total"] == 8
     r = client.get("/api/v1/anomalies?kind=utilisation", headers=auth(ministry_token))
-    assert r.json()["total"] == 2  # FLAG_PLAN: utilisation/medium + utilisation/low
+    assert r.json()["total"] == 4  # FLAG_PLAN: 2× (utilisation/medium + utilisation/low)
     r = client.get("/api/v1/anomalies?workId=W-1014", headers=auth(ministry_token))
     items = r.json()["items"]
     assert len(items) == 1 and items[0]["kind"] == "cost"
@@ -44,7 +44,7 @@ def test_explain_shape(client, ministry_token):
     assert set(body) == {"anomaly", "work"}
     assert body["work"]["id"] == "W-1014"
     assert set(body["work"]) == {
-        "id", "title", "district", "state", "sanctionedLakh", "progressPct",
+        "id", "title", "district", "state", "sanctionedRs", "progressPct",
     }
 
 
@@ -87,4 +87,4 @@ def test_recompute_ministry_only_and_restore(client, ministry_token, district_to
 
     bind_database()
     reseed_demo()
-    assert client.get("/api/v1/anomalies", headers=auth(ministry_token)).json()["total"] == 12
+    assert client.get("/api/v1/anomalies", headers=auth(ministry_token)).json()["total"] == 24

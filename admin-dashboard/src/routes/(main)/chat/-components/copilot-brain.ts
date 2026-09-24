@@ -1,6 +1,6 @@
 import { differenceInCalendarDays } from "date-fns";
 
-import { anomalies, compareSentence, DEMO_TODAY_ISO, evidences, formatLakh, works } from "@/lib/mplads-mock";
+import { anomalies, compareSentence, DEMO_TODAY_ISO, evidences, formatMoneyRs, works } from "@/lib/mplads-mock";
 import type { Anomaly, Work } from "@/lib/mplads-schema";
 
 function parseDay(yyyyMmDd: string): Date {
@@ -28,11 +28,11 @@ function topFlag(workId: string): Flagged | undefined {
 
 function explainWork(work: Work, flag: Anomaly | undefined): string {
   if (!flag) {
-    return `#${work.id} ${work.title} in ${work.district} has no open flags in the demo data. Sanctioned ${formatLakh(work.sanctionedLakh)}, spent ${formatLakh(work.expenditureLakh)}, ${work.progressPct}% complete, held by ${work.tenderHolder} (${work.department}).`;
+    return `#${work.id} ${work.title} in ${work.district} has no open flags in the demo data. Sanctioned ${formatMoneyRs(work.sanctionedRs)}, spent ${formatMoneyRs(work.expenditureRs)}, ${work.progressPct}% complete, held by ${work.tenderHolder} (${work.department}).`;
   }
   const numbers =
-    flag.actualLakh !== null && flag.peerMedianLakh !== null
-      ? `${compareSentence(flag.actualLakh, flag.peerMedianLakh, flag.peerN, work.type, work.district)}. `
+    flag.actualRs !== null && flag.peerMedianRs !== null
+      ? `${compareSentence(flag.actualRs, flag.peerMedianRs, flag.peerN, work.type, work.district)}. `
       : "";
   return `#${work.id}: ${flag.headline}. ${numbers}${flag.corroboration} Tender with ${work.tenderHolder} via ${work.tenderAwardedBy}; ${work.labourDeployed} labour deployed; evidence files attached: ${evidences.filter((item) => item.workId === work.id).length}.`;
 }
@@ -42,7 +42,7 @@ function listHighRisk(): string {
     .filter((anomaly) => anomaly.severity === "high")
     .map((anomaly) => {
       const work = works.find((candidate) => candidate.id === anomaly.workId);
-      return work ? `#${work.id} ${work.title} (${formatLakh(anomaly.actualLakh ?? work.sanctionedLakh)})` : null;
+      return work ? `#${work.id} ${work.title} (${formatMoneyRs(anomaly.actualRs ?? work.sanctionedRs)})` : null;
     })
     .filter((line): line is string => line !== null);
   return `${items.length} high-risk works need review: ${items.join(" · ")}. Open any of them from the Works queue to see the full dossier.`;
@@ -104,10 +104,10 @@ export function answerCopilot(question: string): string {
   if (/compar/.test(text)) {
     const target = knownIds[0] ?? "W-1014";
     const found = topFlag(target);
-    if (found && found.flag.actualLakh !== null && found.flag.peerMedianLakh !== null) {
+    if (found && found.flag.actualRs !== null && found.flag.peerMedianRs !== null) {
       const ratio =
-        found.flag.peerMedianLakh > 0 ? (found.flag.actualLakh / found.flag.peerMedianLakh).toFixed(1) : "—";
-      return `${compareSentence(found.flag.actualLakh, found.flag.peerMedianLakh, found.flag.peerN, found.work.type, found.work.district)} — ${ratio}× the peer median. ${found.flag.corroboration}`;
+        found.flag.peerMedianRs > 0 ? (found.flag.actualRs / found.flag.peerMedianRs).toFixed(1) : "—";
+      return `${compareSentence(found.flag.actualRs, found.flag.peerMedianRs, found.flag.peerN, found.work.type, found.work.district)} — ${ratio}× the peer median. ${found.flag.corroboration}`;
     }
     return found ? explainWork(found.work, found.flag) : capabilities();
   }

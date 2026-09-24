@@ -4,8 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MPLADS_KPIS, works } from "@/lib/mplads-mock";
 
-const spent = works.reduce((total, w) => total + w.expenditureLakh, 0);
-const sanctioned = works.reduce((total, w) => total + w.sanctionedLakh, 0);
+const spent = works.reduce((total, w) => total + w.expenditureRs, 0);
+const sanctioned = works.reduce((total, w) => total + w.sanctionedRs, 0);
 const sampleUtilisation = (spent / sanctioned) * 100;
 
 const kpis = [

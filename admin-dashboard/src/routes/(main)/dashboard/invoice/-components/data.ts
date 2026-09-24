@@ -20,8 +20,8 @@ export interface UCWorkOption {
   district: string;
   state: string;
   agency: string;
-  sanctionedLakh: number;
-  expenditureLakh: number;
+  sanctionedRs: number;
+  expenditureRs: number;
   sanctionDate: string;
   dueDate: string;
   status: Work["status"];
@@ -52,8 +52,8 @@ export const ucWorks: UCWorkOption[] = works
     district: work.district,
     state: work.state,
     agency: work.agency,
-    sanctionedLakh: work.sanctionedLakh,
-    expenditureLakh: work.expenditureLakh,
+    sanctionedRs: work.sanctionedRs,
+    expenditureRs: work.expenditureRs,
     sanctionDate: work.sanctionDate,
     dueDate: work.dueDate,
     status: work.status,
@@ -67,8 +67,8 @@ export const ucWorks: UCWorkOption[] = works
   });
 
 function tranchesFor(work: UCWorkOption): UCTranche[] {
-  const released = Math.round(work.expenditureLakh * 100000);
-  const balance = Math.round(Math.max(work.sanctionedLakh - work.expenditureLakh, 0) * 100000);
+  const released = Math.round(work.expenditureRs);
+  const balance = Math.round(Math.max(work.sanctionedRs - work.expenditureRs, 0));
   return [
     {
       id: `${work.id}-released`,

@@ -22,8 +22,8 @@ def test_notifications_shape_and_derivation(client, ministry_token):
         expected_prefix = "N-high-" if item["kind"] == "high-risk" else f"N-{item['kind']}-"
         assert item["id"].startswith(expected_prefix)
     counts = {k: kinds.count(k) for k in set(kinds)}
-    assert counts["high-risk"] == 5  # five high-severity seed anomalies
-    assert counts["uc"] == 2  # two utilisation seed anomalies
+    assert counts["high-risk"] == 8  # eight high-severity seed anomalies
+    assert counts["uc"] == 4  # four utilisation seed anomalies (doubled plan)
 
 
 def test_geo_rollup_matches_ts_fixture(client, ministry_token):
@@ -50,11 +50,11 @@ def test_kpis_static_snapshot(client, ministry_token):
     assert r.status_code == 200
     body = r.json()
     assert body == {
-        "totalWorks": 12482,
-        "underExecution": 4821,
-        "delayed": 386,
-        "highRisk": 73,
-        "overrunExposureLakh": 41,
+        "totalWorks": 28410,
+        "underExecution": 9120,
+        "delayed": 1140,
+        "highRisk": 214,
+        "overrunExposureRs": 1284000000,
     }
 
 

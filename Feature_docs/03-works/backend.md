@@ -3,7 +3,7 @@
 > Backend for SPEC 03's full ledger. The frontend's URL semantics (`?lens=&state=&district=
 > &type=&q=` + sort + pagination) map 1:1 onto query parameters; the repo query is one Pony
 > generator expression (`structure.md` §works/repo). Wire shapes fixed in `api-reference.md`
-> §Works. Money arrives and leaves as lakhs (`sanctionedLakh`), never rupees, never paise.
+> §Works. Money arrives and leaves as integer rupees (`sanctionedRs`), never paise, never floats.
 
 ## Endpoints
 
@@ -24,10 +24,10 @@
   "items": [ { "id": "W-1014", "title": "Community Hall Construction",
     "type": "community-hall", "state": "Madhya Pradesh", "district": "Bhopal",
     "agency": "PWD Bhopal", "status": "stalled",
-    "sanctionedLakh": 58.9, "expenditureLakh": 41.2, "progressPct": 62,
+    "sanctionedRs": 19000000, "expenditureRs": 13300000, "progressPct": 62,
     "sanctionDate": "2025-11-12", "dueDate": "2026-08-30", "lastUpdate": "2026-06-03",
     "stalledDays": 96, "severity": "high", "kind": "cost" } ],
-  "page": 1, "page_size": 10, "total": 40, "total_pages": 4
+  "page": 1, "page_size": 10, "total": 144, "total_pages": 15
 }
 ```
 
@@ -50,10 +50,10 @@ Peer comparison for SPEC 03's row menu and SPEC 04's "Compare peers" action.
 
 ```jsonc
 // 200 — PeersOut  ·  cached: peer_comparison(work_id)   [analytics-cache.md §4.2]
-{ "work": { "id": "W-1014", "sanctionedLakh": 58.9 },
+{ "work": { "id": "W-1014", "sanctionedRs": 19000000 },
   "peerGroup": { "type": "community-hall", "state": "Madhya Pradesh", "n": 18,
-                 "medianLakh": 24.6 },
-  "distribution": [ { "id": "W-1032", "sanctionedLakh": 25.1 }, … ],   // all n, sorted asc
+                 "medianRs": 7800000 },
+  "distribution": [ { "id": "W-1032", "sanctionedRs": 2510000 }, … ],   // all n, sorted asc
   "position": { "rank": 18, "of": 18, "percentile": 100 } }
 ```
 
@@ -72,7 +72,7 @@ disagree.
 ## Acceptance (backend)
 
 - `?lens=high-risk&state=Madhya+Pradesh` returns exactly the demo set's MP high-severity
-  works; counts in `?lens=` toggle labels (All 40 · Review 12 · High 5) come from
+  works; counts in `?lens=` toggle labels (All 144 · Review 24 · High 8) come from
   `total` per lens — frontend can fetch all three cheaply (not cached, ms-cheap).
 - `q="hall"` matches W-1014 by title; `q` is id/title/agency substring, case-insensitive.
 - `sort=severity-amount` puts W-1014 first for ministry scope (parity test pins this).

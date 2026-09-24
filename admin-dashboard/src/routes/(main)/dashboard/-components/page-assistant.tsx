@@ -14,7 +14,7 @@ import {
   DEMO_TODAY_ISO,
   evidences,
   FLAGSHIP_WORK_ID,
-  formatLakh,
+  formatMoneyRs,
   geoRollup,
   MPLADS_KPIS,
   works,
@@ -54,9 +54,9 @@ function dossierAnswer(
     return `No work matches #${workId} in the demo dataset. Back to Works to pick a flagged case.`;
   }
   if (question === "Compare with peers") {
-    if (top?.actualLakh != null && top?.peerMedianLakh != null) {
-      const ratio = top.peerMedianLakh > 0 ? (top.actualLakh / top.peerMedianLakh).toFixed(1) : "—";
-      return `Peer picture: ${top.peerN} similar ${work.type} works in ${work.district}. Median ${formatLakh(top.peerMedianLakh)} vs this work ${formatLakh(top.actualLakh)} — ${ratio}× the median. ${top.corroboration}`;
+    if (top?.actualRs != null && top?.peerMedianRs != null) {
+      const ratio = top.peerMedianRs > 0 ? (top.actualRs / top.peerMedianRs).toFixed(1) : "—";
+      return `Peer picture: ${top.peerN} similar ${work.type} works in ${work.district}. Median ${formatMoneyRs(top.peerMedianRs)} vs this work ${formatMoneyRs(top.actualRs)} — ${ratio}× the median. ${top.corroboration}`;
     }
     return top
       ? `${top.headline}. ${top.corroboration}`
@@ -73,8 +73,8 @@ function dossierAnswer(
   if (!top) {
     return `No open flags on #${work.id} — nothing to explain in the demo dataset.`;
   }
-  if (top.actualLakh !== null && top.peerMedianLakh !== null) {
-    return `${compareSentence(top.actualLakh, top.peerMedianLakh, top.peerN, work.type, work.district)}. ${top.corroboration} ${flags.length > 1 ? `(${flags.length} open flags on this work.)` : ""}`;
+  if (top.actualRs !== null && top.peerMedianRs !== null) {
+    return `${compareSentence(top.actualRs, top.peerMedianRs, top.peerN, work.type, work.district)}. ${top.corroboration} ${flags.length > 1 ? `(${flags.length} open flags on this work.)` : ""}`;
   }
   return `${top.headline}. ${top.corroboration}`;
 }
@@ -129,7 +129,7 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
   const topState = [...geoRollup].sort((a, b) => b.high - a.high)[0];
 
   if (clean === "/dashboard/overview") {
-    const summary = `Scheme snapshot: ${MPLADS_KPIS.totalWorks.toLocaleString("en-IN")} works · ${MPLADS_KPIS.underExecution.toLocaleString("en-IN")} under execution · ${MPLADS_KPIS.delayed} delayed · ${MPLADS_KPIS.highRisk} high-risk · ₹${MPLADS_KPIS.overrunExposureLakh}L overrun exposure. Top case ${FLAGSHIP_WORK_ID} is 2.4× its peer median with a 96d stall.`;
+    const summary = `Scheme snapshot: ${MPLADS_KPIS.totalWorks.toLocaleString("en-IN")} works · ${MPLADS_KPIS.underExecution.toLocaleString("en-IN")} under execution · ${MPLADS_KPIS.delayed} delayed · ${MPLADS_KPIS.highRisk} high-risk · ${formatMoneyRs(MPLADS_KPIS.overrunExposureRs)} overrun exposure. Top case ${FLAGSHIP_WORK_ID} is 2.4× its peer median with a 96d stall.`;
     const chips = ["What needs attention?", "Where is risk concentrated?", "What is overrun exposure?"] as const;
     return {
       contextTitle: "Overview — scheme snapshot",
@@ -142,7 +142,7 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
             : "No state rollup available in the demo dataset.";
         }
         if (question === "What is overrun exposure?") {
-          return `₹${MPLADS_KPIS.overrunExposureLakh}L above peer estimates across the scheme. Flagship ${FLAGSHIP_WORK_ID}: ₹58.9L vs ₹24.6L median across 18 similar community-hall works in Bhopal.`;
+          return `${formatMoneyRs(MPLADS_KPIS.overrunExposureRs)} above peer estimates across the scheme. Flagship ${FLAGSHIP_WORK_ID}: ₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal.`;
         }
         return `${MPLADS_KPIS.highRisk} high-risk works need review now; ${MPLADS_KPIS.delayed} are past due date. Start with ${FLAGSHIP_WORK_ID}, then the 8-row priority queue.`;
       },
@@ -169,7 +169,7 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
   }
 
   if (clean === "/dashboard/finance") {
-    const summary = `Fund flow: ₹${MPLADS_KPIS.overrunExposureLakh}L overrun exposure · ${utilisationCount} utilisation flags · ${evidenceTotal} evidence files linked. Next releases depend on UCs.`;
+    const summary = `Fund flow: ${formatMoneyRs(MPLADS_KPIS.overrunExposureRs)} overrun exposure · ${utilisationCount} utilisation flags · ${evidenceTotal} evidence files linked. Next releases depend on UCs.`;
     const chips = ["Where is overrun exposure?", "What is utilisation risk?", "Which tranches need UCs?"] as const;
     return {
       contextTitle: "Fund Flow — releases vs utilisation",
@@ -177,7 +177,7 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
       chips,
       answer: (question: string) => {
         if (question === "Where is overrun exposure?") {
-          return `₹${MPLADS_KPIS.overrunExposureLakh}L above peer estimates. Largest demo variance: ${FLAGSHIP_WORK_ID} at ₹58.9L vs ₹24.6L peer median (18 similar works, Bhopal).`;
+          return `${formatMoneyRs(MPLADS_KPIS.overrunExposureRs)} above peer estimates. Largest demo variance: ${FLAGSHIP_WORK_ID} at ₹1.90 Cr vs ₹78.0L peer median (18 similar works, Bhopal).`;
         }
         if (question === "Which tranches need UCs?") {
           return `${utilisationCount} utilisation flags have UCs pending for the last tranche. Attach the certificate in Documents before the next release.`;

@@ -52,7 +52,7 @@ function expectOk(name: string, data: unknown, schema: z.ZodTypeAny, label: stri
 }
 
 // The ledger row is the buildWorksRows projection (id/title/agency/type/district/state/
-// sanctionedLakh/progressPct/status/lastUpdate + severity/kind), NOT the full workSchema —
+// sanctionedRs/progressPct/status/lastUpdate + severity/kind), NOT the full workSchema —
 // so the gate parses it with the projection the works screen actually consumes.
 const workRowSchema = z.object({
   id: workIdSchema,
@@ -61,7 +61,7 @@ const workRowSchema = z.object({
   type: workTypeSchema,
   district: z.string().min(1),
   state: z.string().min(1),
-  sanctionedLakh: z.number().nonnegative(),
+  sanctionedRs: z.number().int().nonnegative(),
   progressPct: z.number().min(0).max(100),
   status: workStatusSchema,
   lastUpdate: yyyyMmDdSchema,

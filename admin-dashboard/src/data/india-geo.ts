@@ -37,6 +37,14 @@ export function districtKey(props: DistrictFeatureProps): string {
   return `${props.st_nm ?? ""}|${props.district ?? ""}`;
 }
 
+/** Always-human label: every polygon resolves a name, even with zero demo works. */
+export function districtLabel(props: DistrictFeatureProps): string {
+  if (!props.district) {
+    return "Unknown area";
+  }
+  return `${props.district}, ${props.st_nm ?? "Unknown state"}`;
+}
+
 export interface DistrictRisk {
   works: number;
   high: number;

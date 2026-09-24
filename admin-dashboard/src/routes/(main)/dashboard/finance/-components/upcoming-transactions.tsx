@@ -4,10 +4,10 @@ import { ChevronRight, Landmark, Zap } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Item, ItemActions, ItemContent, ItemDescription, ItemGroup, ItemMedia, ItemTitle } from "@/components/ui/item";
-import { formatLakh, formatWorkDate, works } from "@/lib/mplads-mock";
+import { formatMoneyRs, formatWorkDate, works } from "@/lib/mplads-mock";
 
 const topBalances = [...works]
-  .map((w) => ({ work: w, balance: w.sanctionedLakh - w.expenditureLakh }))
+  .map((w) => ({ work: w, balance: w.sanctionedRs - w.expenditureRs }))
   .sort((a, b) => b.balance - a.balance)
   .slice(0, 5);
 
@@ -25,7 +25,7 @@ export function UpcomingTransactions() {
         <div className="flex flex-col gap-3">
           <div className="flex flex-col gap-1">
             <h2 className="flex items-baseline text-3xl tabular-nums leading-none tracking-tight">
-              <span className="font-normal">{formatLakh(heldTotal)}</span>
+              <span className="font-normal">{formatMoneyRs(heldTotal)}</span>
             </h2>
             <p className="text-muted-foreground text-sm leading-none">
               held by <span className="font-medium text-foreground">{topBalances.length}</span> works · demo sample
@@ -63,7 +63,7 @@ export function UpcomingTransactions() {
               </ItemMedia>
               <ItemContent>
                 <ItemTitle>
-                  {work.id} · {formatLakh(balance)} unspent
+                  {work.id} · {formatMoneyRs(balance)} unspent
                 </ItemTitle>
                 <ItemDescription>
                   {work.title} • due {formatWorkDate(work.dueDate)}

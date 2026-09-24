@@ -5,7 +5,7 @@ high. Peer law still applies: the (type, state) peer group must be ≥ 8 and its
 size is reported as peer_n (the contract invariant "every flag carries peerN ≥ 8").
 """
 
-from app.common.text import format_lakh
+from app.common.text import format_money_rs
 from app.features.anomalies.engine.registry import Frames, MIN_PEERS
 
 
@@ -33,8 +33,8 @@ def detect(frames: Frames, today) -> list[dict]:
                 "severity": "high",
                 "headline": f"Possible overlapping scope with a nearby {row['type']} work — needs review",
                 "peer_n": int(row["peer_n"]),
-                "peer_median_lakh": None,
-                "actual_lakh": float(row["sanctioned_lakh"]),
+                "peer_median_rs": None,
+                "actual_rs": int(row["sanctioned_rs"]),
                 "corroboration": (
                     f"Same type and district as {twin.name} ({twin['title']}); "
                     "site extents need a joint review."
@@ -44,7 +44,7 @@ def detect(frames: Frames, today) -> list[dict]:
                         "label": "Near-duplicate",
                         "value": f"{twin.name} — {twin['title']} in {twin['district']}",
                     },
-                    {"label": "Sanctioned cost", "value": format_lakh(float(row["sanctioned_lakh"]))},
+                    {"label": "Sanctioned cost", "value": format_money_rs(int(row["sanctioned_rs"]))},
                 ],
                 "detector_inputs": {
                     "twin": str(twin.name),

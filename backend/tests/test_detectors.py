@@ -28,8 +28,8 @@ def base_row(id: str, **over) -> dict:
         "state": "Test State",
         "district": "Test District",
         "status": "in-execution",
-        "sanctioned_lakh": 40.0,
-        "expenditure_lakh": 20.0,
+        "sanctioned_rs": 4000000,
+        "expenditure_rs": 2000000,
         "progress_pct": 50,
         "last_update": TODAY - timedelta(days=10),
         "due_date": date(2026, 12, 1),
@@ -38,31 +38,31 @@ def base_row(id: str, **over) -> dict:
     return row
 
 
-def peers(count: int = 8, sanctioned: float = 40.0, expenditure: float = 20.0, **over) -> list[dict]:
+def peers(count: int = 8, sanctioned: int = 4000000, expenditure: int = 2000000, **over) -> list[dict]:
     # Distinct districts: the peer group is type+state, but twins are district+type —
     # co-located peers would be mutual twins and pollute duplicate-detection tests.
     return [base_row(f"W-{9000 + i}", district=f"Peer District {i}",
-                     sanctioned_lakh=sanctioned, expenditure_lakh=expenditure, **over)
+                     sanctioned_rs=sanctioned, expenditure_rs=expenditure, **over)
             for i in range(count)]
 
 
 def test_cost_high_and_medium_bands():
-    rows = peers(8, sanctioned=40.0, expenditure=20.0) + [
-        base_row("W-HIGH", sanctioned_lakh=100.0),   # ratio 2.5 → high
-        base_row("W-MED", sanctioned_lakh=60.0),     # ratio 1.5 → medium
+    rows = peers(8, sanctioned=4000000, expenditure=2000000) + [
+        base_row("W-HIGH", sanctioned_rs=10000000),   # ratio 2.5 → high
+        base_row("W-MED", sanctioned_rs=6000000),     # ratio 1.5 → medium
     ]
     flags = cost.detect(frame(rows), TODAY)
     by_work = {f["work_id"]: f for f in flags}
     assert by_work["W-HIGH"]["severity"] == "high"
     assert by_work["W-MED"]["severity"] == "medium"
     assert by_work["W-HIGH"]["peer_n"] == 9  # LOO: 9 others in the group
-    assert by_work["W-HIGH"]["peer_median_lakh"] == 40.0
+    assert by_work["W-HIGH"]["peer_median_rs"] == 4000000
     assert by_work["W-HIGH"]["signals"][0]["label"] == "Peer comparison"
 
 
 def test_cost_skips_sanctioned_status_and_small_peer_groups():
     rows = peers(8) + [
-        base_row("W-SAN", status="sanctioned", sanctioned_lakh=200.0),  # no spending signal yet
+        base_row("W-SAN", status="sanctioned", sanctioned_rs=20000000),  # no spending signal yet
     ]
     assert cost.detect(frame(rows), TODAY) == []
 
@@ -78,7 +78,7 @@ def test_delay_bands_and_threshold():
     assert by_work["W-130"]["severity"] == "high"
     assert by_work["W-95"]["severity"] == "medium"
     assert "W-30" not in by_work
-    assert by_work["W-130"]["peer_median_lakh"] is None  # money not meaningful for delay
+    assert by_work["W-130"]["peer_median_rs"] is None  # money not meaningful for delay
     assert by_work["W-130"]["headline"] == "No progress update in 130d — needs review"
 
 
@@ -94,10 +94,10 @@ def test_duplicate_twin_and_cost_signal():
 
 
 def test_expenditure_bands_with_progress_guard():
-    rows = peers(8, expenditure=10.0) + [
-        base_row("W-HIGH", expenditure_lakh=20.0, progress_pct=40),   # ratio 2.0 → high
-        base_row("W-MED", expenditure_lakh=14.0, progress_pct=55),    # ratio 1.4 → medium
-        base_row("W-GUARD", expenditure_lakh=20.0, progress_pct=90),  # guard: 90% done
+    rows = peers(8, expenditure=1000000) + [
+        base_row("W-HIGH", expenditure_rs=2000000, progress_pct=40),   # ratio 2.0 → high
+        base_row("W-MED", expenditure_rs=1400000, progress_pct=55),    # ratio 1.4 → medium
+        base_row("W-GUARD", expenditure_rs=2000000, progress_pct=90),  # guard: 90% done
     ]
     flags = expenditure.detect(frame(rows), TODAY)
     by_work = {f["work_id"]: f for f in flags}
@@ -107,9 +107,9 @@ def test_expenditure_bands_with_progress_guard():
 
 
 def test_utilisation_threshold_and_ten_lakh_floor():
-    rows = peers(8, expenditure=30.0) + [  # peer utilisation = 30/40 = 0.75
-        base_row("W-LOW", sanctioned_lakh=50.0, expenditure_lakh=5.0),   # 0.10 < 0.6*0.75
-        base_row("W-TINY", sanctioned_lakh=5.0, expenditure_lakh=0.5),   # ₹10L floor skip
+    rows = peers(8, expenditure=3000000) + [  # peer utilisation = 30/40 = 0.75
+        base_row("W-LOW", sanctioned_rs=5000000, expenditure_rs=500000),   # 0.10 < 0.6*0.75
+        base_row("W-TINY", sanctioned_rs=500000, expenditure_rs=50000),   # ₹10L floor skip
     ]
     flags = utilisation.detect(frame(rows), TODAY)
     by_work = {f["work_id"]: f for f in flags}
@@ -120,7 +120,7 @@ def test_utilisation_threshold_and_ten_lakh_floor():
 
 def test_pipeline_dedupes_and_orders():
     rows = peers(8) + [
-        base_row("W-BOTH", last_update=TODAY - timedelta(days=150), sanctioned_lakh=100.0),
+        base_row("W-BOTH", last_update=TODAY - timedelta(days=150), sanctioned_rs=10000000),
     ]  # W-BOTH: cost high (2.5×) AND delay high — dedupe keeps both kinds
     found = run_detectors(frame(rows), TODAY)
     keys = [(f["work_id"], f["kind"]) for f in found]

@@ -19,8 +19,8 @@ class AnomalyOut(CamelModel):
     severity: str
     headline: str
     peer_n: int
-    peer_median_lakh: float | None
-    actual_lakh: float | None
+    peer_median_rs: int | None
+    actual_rs: int | None
     unit: str
     corroboration: str
     signals: list[SignalOut]
@@ -33,7 +33,7 @@ class WorkSummaryOut(CamelModel):
     title: str
     district: str
     state: str
-    sanctioned_lakh: float
+    sanctioned_rs: int
     progress_pct: int
 
 

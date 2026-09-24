@@ -30,10 +30,10 @@ def test_mulberry32_matches_node_vectors():
 
 def test_dataset_counts():
     data = build_demo_dataset()
-    assert len(data["works"]) == 40
-    assert len(data["anomalies"]) == 12
+    assert len(data["works"]) == 144
+    assert len(data["anomalies"]) == 24
     assert len(data["evidences"]) == 6
-    assert len(data["activities"]) == 33
+    assert len(data["activities"]) == 65
     assert len(data["geoRollup"]) == 6
 
 
@@ -50,7 +50,7 @@ def ts_fixture() -> dict:
 def test_works_parity(ts_fixture: dict):
     py = build_demo_dataset()["works"]
     ts = ts_fixture["works"]
-    assert py == ts  # key-for-key deep equality, 40 works × 21 fields
+    assert py == ts  # key-for-key deep equality, 144 works × 21 fields
 
 
 def test_anomalies_parity(ts_fixture: dict):
@@ -80,14 +80,14 @@ def test_geo_rollup_parity(ts_fixture: dict):
 def test_flagship_pinned_values():
     data = build_demo_dataset()
     w = next(w for w in data["works"] if w["id"] == "W-1014")
-    assert w["sanctionedLakh"] == 58.9
-    assert w["expenditureLakh"] == 41.2
+    assert w["sanctionedRs"] == 19000000
+    assert w["expenditureRs"] == 13300000
     assert w["progressPct"] == 62
     assert w["status"] == "stalled"
     assert w["lastUpdate"] == "2026-06-03"
     a = data["anomalies"][0]
     assert a["id"] == "A-1" and a["workId"] == "W-1014"
-    assert a["peerN"] == 18 and a["peerMedianLakh"] == 24.6
+    assert a["peerN"] == 18 and a["peerMedianRs"] == 7800000
     assert a["signals"][0]["value"] == (
-        "₹58.9L vs ₹24.6L median across 18 similar community-hall works in Bhopal"
+        "₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal"
     )

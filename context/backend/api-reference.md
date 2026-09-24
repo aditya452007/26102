@@ -6,8 +6,9 @@
 > examples in this file (key-for-key).
 >
 > Base URL: `http://localhost:8000/api/v1` · Interactive docs: `/docs` (FastAPI auto-OpenAPI)
-> All money values are **lakhs** (`sanctionedLakh: 58.9` = ₹58.9 lakh). Dates are `yyyy-MM-dd`
-> strings; timestamps are ISO 8601. Errors follow the shared error model in `README.md`.
+> All money values are **integer rupees** (`sanctionedRs: 19000000` = ₹1.90 Cr; ADR-035).
+> Display rule (frontend `formatMoneyRs`): ≥ ₹1 Cr renders `₹x.xx Cr`, below renders `₹xx.xL`.
+> Dates are `yyyy-MM-dd` strings; timestamps are ISO 8601. Errors follow the shared error model in `README.md`.
 
 ## Authentication
 
@@ -66,7 +67,7 @@ Query parameters:
 | `sort` | `amount` \| `updated` \| `id` | default `id` |
 | `order` | `asc` \| `desc` | default `desc` for `amount`/`updated` |
 | `page` | int ≥ 1 | default 1 |
-| `pageSize` | int 1–100 | default 20 (frontend uses 10–50) |
+| `pageSize` | int 1–200 | default 20 (frontend uses 10–50; overview bundle fetches 200 for the 144-work demo) |
 
 Each row joins the officer's worst anomaly (severity rank high < medium < low) exactly like
 `buildWorksRows` in the frontend.
@@ -82,7 +83,7 @@ Each row joins the officer's worst anomaly (severity rank high < medium < low) e
       "type": "community-hall",
       "district": "Bhopal",
       "state": "Madhya Pradesh",
-      "sanctionedLakh": 58.9,
+      "sanctionedRs": 19000000,
       "progressPct": 62,
       "status": "stalled",
       "lastUpdate": "2026-06-03",
@@ -91,20 +92,20 @@ Each row joins the officer's worst anomaly (severity rank high < medium < low) e
     },
     {
       "id": "W-1007",
-      "title": "Piped Water Extension — Zone 12",
-      "agency": "Agency-East-3",
-      "type": "water",
-      "district": "Indore",
-      "state": "Madhya Pradesh",
-      "sanctionedLakh": 22.4,
-      "progressPct": 34,
+      "title": "Storm Drain — Sector 15",
+      "agency": "Contractor-06",
+      "type": "drainage",
+      "district": "Cuttack",
+      "state": "Odisha",
+      "sanctionedRs": 7660000,
+      "progressPct": 81,
       "status": "in-execution",
-      "lastUpdate": "2026-08-20",
+      "lastUpdate": "2026-08-13",
       "severity": null,
       "kind": null
     }
   ],
-  "total": 40,
+  "total": 144,
   "page": 1,
   "pageSize": 20
 }
@@ -126,8 +127,8 @@ fields, same keys as `workSchema`), e.g.:
   "district": "Bhopal",
   "agency": "Contractor-07",
   "status": "stalled",
-  "sanctionedLakh": 58.9,
-  "expenditureLakh": 41.2,
+  "sanctionedRs": 19000000,
+  "expenditureRs": 13300000,
   "progressPct": 62,
   "sanctionDate": "2024-11-20",
   "dueDate": "2025-10-15",
@@ -139,7 +140,7 @@ fields, same keys as `workSchema`), e.g.:
   "department": "PWD",
   "labourDeployed": 42,
   "demandedDays": 330,
-  "returnedLakh": 0
+  "returnedRs": 0
 }
 ```
 
@@ -156,8 +157,8 @@ What `dossier-data.ts` assembles from three mock imports today. Response:
   "decision": { "status": "action-required", "note": "Field verification scheduled", "at": "2026-09-07T08:15:00.000Z", "by": "District Officer (demo)" },
   "peers": {
     "peerN": 18,
-    "medianSanctionedLakh": 24.6,
-    "medianExpenditureLakh": 11.8,
+    "medianSanctionedRs": 7800000,
+    "medianExpenditureRs": 1180000,
     "medianProgressPct": 55
   }
 }
@@ -172,11 +173,11 @@ What `dossier-data.ts` assembles from three mock imports today. Response:
   "workId": "W-1014",
   "peerN": 18,
   "rows": [
-    { "metric": "expenditure",  "workValue": 41.2, "peerMedian": 11.8 },
+    { "metric": "expenditure",  "workValue": 13300000, "peerMedian": 1180000 },
     { "metric": "progress",     "workValue": 62,   "peerMedian": 55 },
     { "metric": "stallDays",    "workValue": 96,   "peerMedian": 21 }
   ],
-  "members": [ { "id": "W-1002", "title": "Community Hall — Ward Block 3", "sanctionedLakh": 24.1 } ]
+  "members": [ { "id": "W-1002", "title": "Community Hall — Ward Block 3", "sanctionedRs": 2410000 } ]
 }
 ```
 
@@ -202,12 +203,12 @@ Query parameters: `workId` (string), `severity` (`high|medium|low`), `kind`
       "severity": "high",
       "headline": "Sanctioned cost 2.4× peer median with a 96d stall — needs review",
       "peerN": 18,
-      "peerMedianLakh": 24.6,
-      "actualLakh": 58.9,
-      "unit": "₹L",
+    "peerMedianRs": 7800000,
+    "actualRs": 19000000,
+    "unit": "₹",
       "corroboration": "Single-estimate sanction plus a 96-day stall corroborates the cost variance.",
       "signals": [
-        { "label": "Peer comparison", "value": "₹58.9L vs ₹24.6L median across 18 similar community-hall works in Bhopal" },
+        { "label": "Peer comparison", "value": "₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal" },
         { "label": "Corroborating signal", "value": "96d stall — last update 96d ago" }
       ]
     }
@@ -222,11 +223,11 @@ these values.
 ### `GET /anomalies/{anomaly_id}` — explain one flag (copilot tool)
 
 Returns the single anomaly object (same shape as items above) plus `work` summary:
-`{ "anomaly": {...}, "work": { "id", "title", "district", "state", "sanctionedLakh", "progressPct" } }`.
+`{ "anomaly": {...}, "work": { "id", "title", "district", "state", "sanctionedRs", "progressPct" } }`.
 
 ### `POST /detectors/recompute` — run all detectors, replace flags (ministry only)
 
-Triggers the detector service (anomaly-engine.md) synchronously; 40-work dataset completes in
+Triggers the detector service (anomaly-engine.md) synchronously; 144-work dataset completes in
 milliseconds. Response:
 
 ```json
@@ -347,11 +348,11 @@ with `status = stalled` → one `stall` item; for every non-completed work past 
 
 ```json
 {
-  "totalWorks": 12482,
-  "underExecution": 4821,
-  "delayed": 386,
-  "highRisk": 73,
-  "overrunExposureLakh": 41
+  "totalWorks": 28410,
+  "underExecution": 9120,
+  "delayed": 1140,
+  "highRisk": 214,
+  "overrunExposureRs": 1284000000
 }
 ```
 

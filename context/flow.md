@@ -33,7 +33,7 @@ graph TD
 ## User flows
 
 ### Flow: Morning triage
-**Goal**: know what needs attention today. **Steps**: Overview KPIs + risk map → high-priority queue → click top case → dossier.
+**Goal**: know what needs attention today. **Steps**: Overview KPIs + risk map → high-priority queue → click top case → dossier. Map rule (ADR-035): hovering ANY district shows `District, State` plus `N works · M high-risk` or `no works in demo sample` — never a bare grey polygon; clicking an empty district filters the queue to its honest All-clear card (one click clears).
 
 ```mermaid
 flowchart LR
@@ -70,6 +70,27 @@ sequenceDiagram
     R->>C: import mock Work + Anomaly[] + Evidence[]
     C-->>R: typed data (Zod shapes)
     R-->>U: rendered dossier
+```
+
+### Overview on 010-api-fallback: backend-first, seed-fallback
+```mermaid
+sequenceDiagram
+    participant U as Officer
+    participant R as overview route loader
+    participant H as probeBackend (single-flight)
+    participant A as FastAPI /api/v1
+    participant M as Seed (mplads-mock)
+    U->>R: opens /dashboard/overview
+    R->>H: GET /healthz (≤1.5s, once per visit)
+    alt healthy
+        R->>A: kpis + works + anomalies (parallel, demo-JWT)
+        alt all 200 + Zod green → render live
+        else any failure → M-->>R: seed → render
+        end
+    else unhealthy
+        R->>M: seed (zero data fetches attempted)
+        M-->>R: instant render
+    end
 ```
 
 ### Target (backend built): anomaly-flagged works
@@ -123,7 +144,8 @@ app/features/anomalies/engine/    # pipeline + 5 pure pandas detector fns
 ```
 Layers: router (controller, ≤15 lines, exactly one service call) → service (business logic,
 Pydantic in/out, never Pony entities) → repo (the only Pony-speaking layer) → entities
-(`core/db.py`). Analytics: detectors compute+store at ingest; geo/queue/notifications/peer
+(`core/db.py`). Money on the wire and in frames is integer rupees (`*_rs` / `*Rs`, `unit: "₹"`;
+medians round to ₹10k via `round_10k`); ratios are unit-invariant. Analytics: detectors compute+store at ingest; geo/queue/notifications/peer
 read models are cached behind a version tag (bumped on recompute/mutation) + 300 s TTL;
 works list + dossier are deliberately never cached. Auth: Bearer JWT (HS256, 1 h) with
 role+scope claims; scope predicates applied in repo queries; writes 403 out-of-scope,
@@ -147,11 +169,12 @@ Extended: KPI strip (sanctioned/spent/progress/stall/flags/labour) + map/tender 
 
 ### Overview (to build)
 ```
-/overview (route.tsx, composes)
-  ├─ <KpiStrip/>               (default/ donor: metric-cards)
-  ├─ <IndiaRiskMap/>           (logistics/shipment-route-map donor + India TopoJSON TO ADD)
-  └─ <PriorityQueue/>          (tasks/crm table donor: columns/schema/table, top-N)
+ /overview (route.tsx, composes)
+   ├─ <KpiStrip/>               (default/ donor: metric-cards)
+   ├─ <IndiaRiskMap/>           (logistics/shipment-route-map donor + India TopoJSON TO ADD)
+   └─ <PriorityQueue/>          (tasks/crm table donor: columns/schema/table, top-N)
 ```
+Built (SPEC 02 + ADR-035): `IndiaRiskMap` reads `DistrictSlice[]` + `districtLabel()` (every polygon named, 3-tier tooltip, `No works in sample` legend); money renders via `formatMoneyRs` (₹L/₹Cr adaptive); queue top-8 flagship-first over 144 works / 24 flags.
 
 ### Works (to build)
 ```
@@ -181,6 +204,7 @@ Extended: KPI strip (sanctioned/spent/progress/stall/flags/labour) + map/tender 
 
 | Function | Input (Zod) | Output | Today |
 |----------|-------------|--------|-------|
+| `overview.bundle` | — (ministry demo login server-side) | `{ ok, kpis, rows, anomalies }` → queue + geo + KPIs | **live API first, seed fallback** (`010-api-fallback`; probe once per visit, `{ ok: false }` → seed, never throws) |
 | `works.list` | filters/search/sort/page | Work[] + total | mock `data.ts` |
 | `works.get` | workId | Work detail | mock |
 | `anomalies.list` | workId \| filters | Anomaly[] (+peer stats) | precomputed mock flags |

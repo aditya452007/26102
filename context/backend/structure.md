@@ -123,7 +123,7 @@ class Work(db.Entity):
     type = Required(str)            # road|community-hall|water|school|drainage|streetlight
     state = Required(str); district = Required(str); agency = Required(str)
     status = Required(str)          # in-execution|completed|sanctioned|stalled
-    sanctioned_lakh = Required(Decimal); expenditure_lakh = Required(Decimal)
+    sanctioned_rs = Required(int, size=64); expenditure_rs = Required(int, size=64)  # integer rupees (ADR-035)
     progress_pct = Required(int)
     sanction_date = Required(date); due_date = Required(date); last_update = Required(date)
     anomalies = Set(Anomaly)        # navigation only — reads go through repos
@@ -145,7 +145,7 @@ repos anywhere in v1. Rules:
   Pony's optimistic-update-free serial mode for multi-row transactions (recompute semantics,
   anomaly-engine.md §Recompute).
 - Concurrency model: Postgres does the locking; Pony's flush-on-attribute-set is fine at demo
-  scale (40 works). Revisit only if real ingest changes the profile.
+  scale (144 works). Revisit only if real ingest changes the profile.
 
 ## Response mapping (Pony → Pydantic)
 
@@ -157,7 +157,7 @@ are its server twin. Mapping is explicit — one `from_entity` classmethod per s
 class WorkOut(BaseModel):
     id: str; title: str; type: WorkType; state: str; district: str; agency: str
     status: WorkStatus
-    sanctionedLakh: float; expenditureLakh: float; progressPct: int
+    sanctionedRs: int; expenditureRs: int; progressPct: int
     sanctionDate: date; dueDate: date; lastUpdate: date
     stalledDays: int | None = None
 

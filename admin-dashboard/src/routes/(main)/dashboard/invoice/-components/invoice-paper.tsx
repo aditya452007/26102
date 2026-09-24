@@ -1,3 +1,4 @@
+import { formatMoneyRs } from "@/lib/mplads-mock";
 import { formatCurrency } from "@/lib/utils";
 
 import {
@@ -58,8 +59,8 @@ export function InvoicePaper({ invoice }: { invoice: UCFormValues }) {
           <div>
             <p className="mb-4 font-semibold uppercase">Agency</p>
             <p>{work.agency}</p>
-            <p>Sanctioned {work.sanctionedLakh.toFixed(1)}L</p>
-            <p>Expenditure {work.expenditureLakh.toFixed(1)}L</p>
+            <p>Sanctioned {formatMoneyRs(work.sanctionedRs)}</p>
+            <p>Expenditure {formatMoneyRs(work.expenditureRs)}</p>
           </div>
         </section>
       </header>

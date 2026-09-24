@@ -35,6 +35,9 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|----------|
+| ADR-035 | 2026-09-24 | Map empty-states + 144-work sample + full rupee migration (contract, seed, entities, engine, UI, docs); supersedes ADR-034 lane + bumps 010 pageSize 100→200 | Accepted | mplads-schema/mock, overview/*, india-geo, server/mplads, backend seed/db/engine/tests, alembic 0002, all backend docs, Feature_docs 00–05 |
+| ADR-034 | 2026-09-24 | Backend money migrates lakh-float → rupee-int (wire `*Rs` ints, `unit "₹"`, `round_10k` medians, ₹10L guard = 1000000); sibling worker owns entities/helpers/seed | Accepted (lane record; completed end-to-end by ADR-035) | backend/app/features/{works,anomalies,overview}/**, engine/*, tests/test_{detectors,contract_*} |
+| ADR-033 | 2026-09-19 | Overview backend-first with seed fallback: single /healthz probe per visit, Zod-validated bundle server fn returning { ok:false } on any failure, demo-ministry server login, role lens stays client-side | Accepted | admin-dashboard/src/server/mplads/*, dashboard/overview/* |
 | ADR-032 | 2026-09-16 | No db_session yield-dependency (Pony×FastAPI thread-local law): services own their transactions; flush before serializing auto PKs; omit null `note` keys per Zod optional law | Accepted | core/deps.py, all 8 routers, decisions repo/schemas, admin-dashboard/scripts/verify-api-contract.ts |
 | ADR-031 | 2026-09-16 | Peer-statistics honesty: seeded peerN/peerMedianLakh are demo fiction; real peer groups = (type, state) with n≥8; recompute replaces stored flags with honest computation; dossier omits peers block | Accepted | works feature, anomalies engine, api-reference.md §peers, seed-generator.md |
 | ADR-030 | 2026-09-16 | Backend v1 implemented green (52 tests): feature slices, Pony entities with nullable=True law, hand-written Alembic DDL, pandas detector registry, versioned lru_cache; seeder OWNS its transactions — callers never wrap it in db_session | Accepted | backend/**, tests/**, implementation-plan.md |
@@ -86,6 +89,36 @@
 ---
 
 ## Decision Entries
+
+### ADR-035: Map empty-states + denser sample + rupee-integer money (full scope)
+- **Date**: 2026-09-24
+- **Status**: Accepted
+- **Context**: User report: the risk map renders bare grey for districts with no demo data (no state name, "nothing"); the 40-work sample leaves the 760-district map looking empty; lakh-float money (`₹58.9L`, scheme exposure `₹41L`) is not government-credible — eSAKSHI stores integer rupees and the scheme talks crores. Asked for a spec first; approved SPEC rev 2 (144 works, display-vs-store vote: store-rupees-now, empty-click filters, rescaled KPIs).
+- **Options considered**: Tooltips only, no density change (rejected — map still sparse); display-only crores keeping lakh columns (rejected by user vote — eSAKSHI truth is rupees); dual lakh+crore columns (rejected — dual-write transition for a demo seed); new districts added to GeoJSON (rejected — 12×12 round-robin densifies without new geometry).
+- **Decision**: (1) Map: `districtLabel()` in `india-geo.ts`, 3-tier tooltips, `No works in sample` legend, empty click → `?district=` + All-clear card. (2) Sample: 144 works / 24 flags (FLAG_PLAN doubled, statuses 66/26/26/25), flagship pinned, storage key `mplads-demo-v2`. (3) Money: Zod `*Rs int` + `unit "₹"`, TS `formatMoneyRs`/`round10k`, Pony `BIGINT`, Alembic `0002_rupees` (×100000 USING conversion), engine `round_10k` medians + `sanctioned_rs >= 1000000` guard (₹10L floor, real-terms unchanged), ratios untouched (unit-invariant), KPIs `{28410, 9120, 1140, 214, 1284000000}`, `pageSize` cap 100→200 (144 rows need one page; 010's `pageSize=100` updated to 200), fixture regenerated (144/24/6/65). Docs synced: data-model, seed-generator, api-reference, anomaly-engine, analytics-cache, structure, implementation-plan, verification-plan, Feature_docs 00–05.
+- **Why**: Grey-no-label reads as broken, not empty — naming every polygon keeps the jury oriented; integer rupees make the mock→real swap honest (no float paise, ever); one adaptive formatter keeps every screen consistent; the migration is atomic (parity test + 52-suite prove both sides moved together).
+- **Consequences**: Old `mplads-demo-v1` localStorage decisions are orphaned (key bump, demo-only); recompute at demo scale still yields ~0 flags (peer groups ~4 < 8 — ADR-031 stands); dossier `peers`-block doc drift in api-reference pre-dates this and stays open (progress-tracker Next Up #3). Biome format noise is repo-wide CRLF, proven on untouched files — not churned.
+- **Affects**: `mplads-schema.ts`, `mplads-mock.ts`, overview `-components/*`, `india-geo.ts`, `server/mplads/overview.ts`, all works/dossier/copilot/finance/analytics/invoice readers, backend seed/db/engine/services/tests, `0002_rupees`, every backend doc, Feature_docs 00–05. Supersedes ADR-034 (lane record) into the completed whole.
+
+### ADR-034: Rupee-integer money (mechanical lakh→Rs migration, split-worker)
+- **Date**: 2026-09-24
+- **Status**: Accepted
+- **Context**: Wire/seed mock move to integer rupees; backend services/schemas/engines/tests must match character-for-character while another worker migrates entities/helpers/seed.
+- **Options considered**: Big-bang single-worker migration (rejected — task split across two workers by design); float-rupees (rejected — contract says int/BIGINT).
+- **Decision**: `*_rs`/`*Rs` ints, `unit: "₹"`, `round_10k` for money medians, `sanctioned_rs >= 1000000` guard, `overrunExposureRs: 1284000000`, pinned W-1014/A-1 values; `one_decimal` stays only for stallDays progress math.
+- **Why**: Ratios are unit-invariant so formulas don't change; rounding/display live in the sibling worker's helpers, keeping this lane a pure rename.
+- **Consequences**: Suite red until the sibling lane lands (`round_10k`/`format_money_rs`/`sanctioned_rs` attrs/seed values); `PeerRowOut` floats accept ints so its schema is untouched.
+- **Affects**: backend/app/features/{works,anomalies,overview}/**, engine/*, tests/test_{detectors,contract_*}
+
+### ADR-033: Overview backend-first, seed-fallback (no screen-of-death)
+- **Date**: 2026-09-19
+- **Status**: Accepted
+- **Context**: Frontend ran purely on `mplads-mock.ts` seed while FastAPI+Postgres sat unwired; user wants live data when the backend is up and instant seed when it is not, with exactly one health check per visit (never a retry storm) and no dead/error screens.
+- **Options considered**: Delete the seed and fetch live always (rejected — backend-down = broken demo); per-API try/catch with no probe (rejected — N hanging timeouts per page); client-side probe + direct browser→API fetch (rejected — splits the data path; server-fn proxy is the ADR-025 law); cross-visit cached verdict (rejected — stale if the backend starts later; per-visit single-flight probe costs ~0 ms when refused).
+- **Decision**: `server/mplads/api-client.ts` (1.5 s timeout fetch, single-flight `probeBackend()`, cached demo-ministry login, retry-once on 401) + `server/mplads/overview.ts` bundle fn (`/overview/kpis` + `/works?pageSize=100` + `/anomalies?limit=200`, Zod-parsed, `{ ok:false }` on ANY failure — never throws) + overview loader renders live derivation or seed derivation. Backend `/overview/geo|queue` deliberately NOT used: geo is state-level (UI needs district slices) and queue rows lack full anomaly detail — joining works+anomalies client-side reuses the exact seed derivation with zero component changes. Server always scopes as ministry; the header role lens filters locally as before. Silent (no live/demo badge) per user vote.
+- **Why**: One cheap probe replaces N timeouts; `{ ok:false }` makes fallback a type-level guarantee instead of scattered try/catch; reusing the seed derivation means live and seed paint pixel-identical shapes.
+- **Consequences**: New env knobs `NIRIKSHAN_API_URL` (default `http://localhost:8000`), `NIRIKSHAN_DEMO_EMAIL/PASSWORD` (defaults ministry/demo1234 — demo only). Pattern to replicate for Works/Dossier next.
+- **Affects**: admin-dashboard/src/server/mplads/*, dashboard/overview/route.tsx, overview/-components/data.ts + kpi-strip.tsx
 
 ### ADR-032: No db_session yield-dependency — services own transactions (Pony × FastAPI concurrency law)
 - **Date**: 2026-09-16

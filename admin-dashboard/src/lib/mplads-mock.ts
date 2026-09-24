@@ -6,18 +6,18 @@ import type { Activity, Anomaly, AnomalyKind, Evidence, Severity, Work, WorkStat
 
 export const MPLADS_SEED = 26102;
 
-export const MPLADS_STORAGE_KEY = "mplads-demo-v1";
+export const MPLADS_STORAGE_KEY = "mplads-demo-v2";
 
 export const DEMO_TODAY_ISO = "2026-09-07";
 
 export const FLAGSHIP_WORK_ID = "W-1014";
 
 export const MPLADS_KPIS = {
-  totalWorks: 12482,
-  underExecution: 4821,
-  delayed: 386,
-  highRisk: 73,
-  overrunExposureLakh: 41,
+  totalWorks: 28410,
+  underExecution: 9120,
+  delayed: 1140,
+  highRisk: 214,
+  overrunExposureRs: 1284000000,
 } as const;
 
 const DEMO_TODAY = new Date(2026, 8, 7);
@@ -61,6 +61,18 @@ const FLAG_PLAN: { kind: AnomalyKind; severity: Severity }[] = [
   { kind: "expenditure", severity: "low" },
   { kind: "delay", severity: "low" },
   { kind: "utilisation", severity: "low" },
+  { kind: "cost", severity: "high" },
+  { kind: "duplicate", severity: "high" },
+  { kind: "delay", severity: "high" },
+  { kind: "expenditure", severity: "medium" },
+  { kind: "cost", severity: "medium" },
+  { kind: "utilisation", severity: "medium" },
+  { kind: "delay", severity: "medium" },
+  { kind: "cost", severity: "low" },
+  { kind: "expenditure", severity: "low" },
+  { kind: "delay", severity: "low" },
+  { kind: "utilisation", severity: "low" },
+  { kind: "duplicate", severity: "medium" },
 ];
 
 export interface GeoRollup {
@@ -90,6 +102,11 @@ function oneDecimal(value: number): number {
   return Math.round(value * 10) / 10;
 }
 
+/** Round rupees to the nearest ₹10k — the rupee mirror of oneDecimal lakh precision. */
+function round10k(value: number): number {
+  return Math.round(value / 10000) * 10000;
+}
+
 function parseDay(yyyyMmDd: string): Date {
   const [y, m, d] = yyyyMmDd.split("-").map(Number);
   return new Date(y, m - 1, d);
@@ -99,12 +116,16 @@ function dayString(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
 
-export function formatLakh(lakh: number): string {
-  return `₹${lakh.toFixed(1)}L`;
+/** Adaptive government display: lakhs below ₹1 Cr, crores at and above. */
+export function formatMoneyRs(rs: number): string {
+  if (rs >= 10000000) {
+    return `₹${(rs / 10000000).toFixed(2)} Cr`;
+  }
+  return `₹${(rs / 100000).toFixed(1)}L`;
 }
 
-export function formatINR(lakh: number): string {
-  return formatCurrency(lakh * 100000, { currency: "INR", locale: "en-IN", noDecimals: true });
+export function formatINR(rs: number): string {
+  return formatCurrency(rs, { currency: "INR", locale: "en-IN", noDecimals: true });
 }
 
 export function formatWorkDate(yyyyMmDd: string): string {
@@ -116,13 +137,13 @@ export function stallLabel(lastUpdate: string): string {
 }
 
 export function compareSentence(
-  actualLakh: number,
-  peerMedianLakh: number,
+  actualRs: number,
+  peerMedianRs: number,
   peerN: number,
   type: WorkType,
   district: string,
 ): string {
-  return `${formatLakh(actualLakh)} vs ${formatLakh(peerMedianLakh)} median across ${peerN} similar ${type} works in ${district}`;
+  return `${formatMoneyRs(actualRs)} vs ${formatMoneyRs(peerMedianRs)} median across ${peerN} similar ${type} works in ${district}`;
 }
 
 function titleFor(type: WorkType, n: number): string {
@@ -192,15 +213,15 @@ function buildWorks(): Work[] {
   const rng = mulberry32(MPLADS_SEED);
   const extraRng = mulberry32(MPLADS_SEED + 500);
   const ids: string[] = [];
-  for (let n = 1001; n <= 1040; n += 1) {
+  for (let n = 1001; n <= 1144; n += 1) {
     ids.push(`W-${n}`);
   }
 
   const restStatuses: WorkStatus[] = shuffled(rng, [
-    ...Array<WorkStatus>(18).fill("in-execution"),
-    ...Array<WorkStatus>(7).fill("stalled"),
-    ...Array<WorkStatus>(7).fill("completed"),
-    ...Array<WorkStatus>(7).fill("sanctioned"),
+    ...Array<WorkStatus>(66).fill("in-execution"),
+    ...Array<WorkStatus>(26).fill("stalled"),
+    ...Array<WorkStatus>(26).fill("completed"),
+    ...Array<WorkStatus>(25).fill("sanctioned"),
   ]);
 
   const sanctionBase = new Date(2023, 3, 1);
@@ -215,9 +236,9 @@ function buildWorks(): Work[] {
     const title = isFlagship ? "Community Hall — Ward Block 7" : titleFor(type, int(rng, 1, 24));
     const agency = isFlagship ? "Contractor-07" : agencyFor(rng);
 
-    const sanctionedLakh = isFlagship ? 58.9 : oneDecimal(4 + rng() * 86);
+    const sanctionedRs = isFlagship ? 19000000 : round10k(800000 + rng() * 27200000);
     const progressPct = isFlagship ? 62 : progressFor(rng, status);
-    const expenditureLakh = isFlagship ? 41.2 : oneDecimal(sanctionedLakh * spendRatioFor(rng, status));
+    const expenditureRs = isFlagship ? 13300000 : round10k(sanctionedRs * spendRatioFor(rng, status));
 
     const sanctionDate = isFlagship
       ? "2024-11-20"
@@ -233,10 +254,10 @@ function buildWorks(): Work[] {
     const department = isFlagship ? "PWD" : DEPARTMENTS[int(extraRng, 0, DEPARTMENTS.length - 1)];
     const labourDeployed = isFlagship ? 42 : int(extraRng, 8, 60);
     const demandedDays = isFlagship ? 330 : int(extraRng, 180, 540);
-    let returnedLakh = 0;
+    let returnedRs = 0;
     if (!isFlagship && extraRng() >= 0.7) {
-      const headroom = Math.max(sanctionedLakh - expenditureLakh, 0);
-      returnedLakh = oneDecimal(Math.min(extraRng() * Math.min(5, sanctionedLakh * 0.15), headroom));
+      const headroom = Math.max(sanctionedRs - expenditureRs, 0);
+      returnedRs = round10k(Math.min(extraRng() * Math.min(1200000, sanctionedRs * 0.15), headroom));
     }
 
     works.push({
@@ -247,8 +268,8 @@ function buildWorks(): Work[] {
       district,
       agency,
       status,
-      sanctionedLakh,
-      expenditureLakh,
+      sanctionedRs,
+      expenditureRs,
       progressPct,
       sanctionDate,
       dueDate,
@@ -260,7 +281,7 @@ function buildWorks(): Work[] {
       department,
       labourDeployed,
       demandedDays,
-      returnedLakh,
+      returnedRs,
     });
   });
 
@@ -282,9 +303,9 @@ function buildAnomaly(work: Work, kind: AnomalyKind, severity: Severity, index: 
       severity,
       headline: `No progress update in ${days}d — needs review`,
       peerN,
-      peerMedianLakh: null,
-      actualLakh: null,
-      unit: "₹L",
+      peerMedianRs: null,
+      actualRs: null,
+      unit: "₹",
       corroboration: `Last field update was ${stallLabel(work.lastUpdate)} against a ${formatWorkDate(work.dueDate)} due date.`,
       signals: [
         { label: "Stall duration", value: `${days}d without update (review threshold 90d)` },
@@ -302,9 +323,9 @@ function buildAnomaly(work: Work, kind: AnomalyKind, severity: Severity, index: 
       severity,
       headline: `Possible overlapping scope with a nearby ${work.type} work — needs review`,
       peerN,
-      peerMedianLakh: null,
-      actualLakh: work.sanctionedLakh,
-      unit: "₹L",
+      peerMedianRs: null,
+      actualRs: work.sanctionedRs,
+      unit: "₹",
       corroboration: twin
         ? `Same type and district as ${twin.id} (${twin.title}); site extents need a joint review.`
         : "Same type and district as another sanctioned work; site extents need a joint review.",
@@ -315,14 +336,14 @@ function buildAnomaly(work: Work, kind: AnomalyKind, severity: Severity, index: 
             ? `${twin.id} — ${twin.title} in ${twin.district}`
             : "Matched on type + district + sanction window",
         },
-        { label: "Sanctioned cost", value: formatLakh(work.sanctionedLakh) },
+        { label: "Sanctioned cost", value: formatMoneyRs(work.sanctionedRs) },
       ],
     };
   }
 
   if (kind === "expenditure") {
     const ratio = severity === "high" ? 1.6 + rng() * 0.6 : 1.2 + rng() * 0.2;
-    const peerMedianLakh = oneDecimal(work.expenditureLakh / ratio);
+    const peerMedianRs = round10k(work.expenditureRs / ratio);
     return {
       id,
       workId: work.id,
@@ -330,25 +351,25 @@ function buildAnomaly(work: Work, kind: AnomalyKind, severity: Severity, index: 
       severity,
       headline: `Front-loaded spending pattern — needs review`,
       peerN,
-      peerMedianLakh,
-      actualLakh: work.expenditureLakh,
-      unit: "₹L",
-      corroboration: `Released ${formatLakh(work.expenditureLakh)} against ${work.progressPct}% physical progress.`,
+      peerMedianRs,
+      actualRs: work.expenditureRs,
+      unit: "₹",
+      corroboration: `Released ${formatMoneyRs(work.expenditureRs)} against ${work.progressPct}% physical progress.`,
       signals: [
         {
           label: "Peer comparison",
-          value: compareSentence(work.expenditureLakh, peerMedianLakh, peerN, work.type, work.district),
+          value: compareSentence(work.expenditureRs, peerMedianRs, peerN, work.type, work.district),
         },
         {
           label: "Progress vs spend",
-          value: `${work.progressPct}% progress at ${formatLakh(work.expenditureLakh)} released`,
+          value: `${work.progressPct}% progress at ${formatMoneyRs(work.expenditureRs)} released`,
         },
       ],
     };
   }
 
   if (kind === "utilisation") {
-    const peerMedianLakh = oneDecimal(work.sanctionedLakh * (0.55 + rng() * 0.2));
+    const peerMedianRs = round10k(work.sanctionedRs * (0.55 + rng() * 0.2));
     return {
       id,
       workId: work.id,
@@ -356,14 +377,14 @@ function buildAnomaly(work: Work, kind: AnomalyKind, severity: Severity, index: 
       severity,
       headline: `Low fund utilisation with utilisation certificate pending — needs review`,
       peerN,
-      peerMedianLakh,
-      actualLakh: work.expenditureLakh,
-      unit: "₹L",
+      peerMedianRs,
+      actualRs: work.expenditureRs,
+      unit: "₹",
       corroboration: "Utilisation certificate for the last released tranche is still awaited from the agency.",
       signals: [
         {
           label: "Peer comparison",
-          value: compareSentence(work.expenditureLakh, peerMedianLakh, peerN, work.type, work.district),
+          value: compareSentence(work.expenditureRs, peerMedianRs, peerN, work.type, work.district),
         },
         { label: "Certificate status", value: "UC pending for last tranche" },
       ],
@@ -372,13 +393,13 @@ function buildAnomaly(work: Work, kind: AnomalyKind, severity: Severity, index: 
 
   let ratio: number;
   if (isFlagship) {
-    ratio = 58.9 / 24.6;
+    ratio = 19000000 / 7800000;
   } else if (severity === "high") {
     ratio = 2.0 + rng() * 0.6;
   } else {
     ratio = 1.4 + rng() * 0.5;
   }
-  const peerMedianLakh = isFlagship ? 24.6 : oneDecimal(work.sanctionedLakh / ratio);
+  const peerMedianRs = isFlagship ? 7800000 : round10k(work.sanctionedRs / ratio);
   const headline = isFlagship
     ? "Sanctioned cost 2.4× peer median with a 96d stall — needs review"
     : `Sanctioned cost above peer median — needs review`;
@@ -389,16 +410,16 @@ function buildAnomaly(work: Work, kind: AnomalyKind, severity: Severity, index: 
     severity,
     headline,
     peerN,
-    peerMedianLakh,
-    actualLakh: work.sanctionedLakh,
-    unit: "₹L",
+    peerMedianRs,
+    actualRs: work.sanctionedRs,
+    unit: "₹",
     corroboration: isFlagship
       ? "Single-estimate sanction plus a 96-day stall corroborates the cost variance."
       : "Single-estimate sanction with limited comparative quotes corroborates the variance.",
     signals: [
       {
         label: "Peer comparison",
-        value: compareSentence(work.sanctionedLakh, peerMedianLakh, peerN, work.type, work.district),
+        value: compareSentence(work.sanctionedRs, peerMedianRs, peerN, work.type, work.district),
       },
       isFlagship
         ? { label: "Corroborating signal", value: `96d stall — last update ${stallLabel(work.lastUpdate)}` }
@@ -448,7 +469,7 @@ function buildActivities(anomalies: Anomaly[]): Activity[] {
     let noteCount = 0;
     if (index === 0) {
       noteCount = 2;
-    } else if (index < 8) {
+    } else if (index < 16) {
       noteCount = 1;
     }
     activities.push({

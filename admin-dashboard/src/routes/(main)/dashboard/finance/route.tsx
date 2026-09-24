@@ -21,7 +21,7 @@ export const Route = createFileRoute("/(main)/dashboard/finance")({
 });
 
 function downloadFundCsv() {
-  const header = "work_id,title,state,district,status,sanctioned_lakh,spent_lakh,balance_lakh,due_date";
+  const header = "work_id,title,state,district,status,sanctioned_rs,spent_rs,balance_rs,due_date";
   const lines = works.map((w) =>
     [
       w.id,
@@ -29,9 +29,9 @@ function downloadFundCsv() {
       w.state,
       w.district,
       w.status,
-      w.sanctionedLakh,
-      w.expenditureLakh,
-      (w.sanctionedLakh - w.expenditureLakh).toFixed(1),
+      w.sanctionedRs,
+      w.expenditureRs,
+      (w.sanctionedRs - w.expenditureRs).toFixed(1),
       w.dueDate,
     ].join(","),
   );
@@ -42,7 +42,7 @@ function downloadFundCsv() {
   anchor.download = "mplads-fund-flow-demo.csv";
   anchor.click();
   URL.revokeObjectURL(url);
-  toast.add({ title: "Export ready", description: "Demo fund-flow CSV downloaded (40 works)." });
+  toast.add({ title: "Export ready", description: "Demo fund-flow CSV downloaded (144 works)." });
 }
 
 function Page() {
@@ -51,7 +51,7 @@ function Page() {
       <div className="space-y-1">
         <h1 className="text-3xl tracking-tight">Scheme fund flow</h1>
         <p className="text-muted-foreground text-sm">
-          Where MPLADS money is released, spent and stuck · demo sample of 40 works.
+          Where MPLADS money is released, spent and stuck · demo sample of 144 works.
         </p>
       </div>
 

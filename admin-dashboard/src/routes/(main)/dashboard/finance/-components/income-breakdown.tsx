@@ -1,21 +1,21 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { formatLakh, works } from "@/lib/mplads-mock";
+import { formatMoneyRs, works } from "@/lib/mplads-mock";
 
-const sanctioned = works.reduce((total, w) => total + w.sanctionedLakh, 0);
-const spent = works.reduce((total, w) => total + w.expenditureLakh, 0);
+const sanctioned = works.reduce((total, w) => total + w.sanctionedRs, 0);
+const spent = works.reduce((total, w) => total + w.expenditureRs, 0);
 const balance = sanctioned - spent;
 
 const splits = [
-  { label: `Sanctioned · 100%`, value: formatLakh(sanctioned), bar: "bg-chart-3" },
+  { label: `Sanctioned · 100%`, value: formatMoneyRs(sanctioned), bar: "bg-chart-3" },
   {
     label: `Released · ${((spent / sanctioned) * 100).toFixed(1)}%`,
-    value: formatLakh(spent),
+    value: formatMoneyRs(spent),
     bar: "bg-chart-3/75",
   },
   {
     label: `Balance · ${((balance / sanctioned) * 100).toFixed(1)}%`,
-    value: formatLakh(balance),
+    value: formatMoneyRs(balance),
     bar: "bg-chart-3/50",
   },
 ];

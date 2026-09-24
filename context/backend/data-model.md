@@ -1,9 +1,10 @@
 # Backend Data Model — Postgres
 
 > Source of truth for the Pony ORM entities (`core/db.py`, one binding per
-> `structure.md`) and Alembic migration `0001_init`.
-> Money is stored as `NUMERIC(12, 2)` in **lakhs** (₹1L units) to mirror the frontend contract
-> (`sanctionedLakh: number`). Dates are `DATE`; timestamps are `TIMESTAMPTZ`.
+> `structure.md`) and Alembic migrations `0001_init` + `0002_rupees`.
+> Money is stored as **`BIGINT` integer rupees** (eSAKSHI-native; ADR-035 — migrated
+> from `NUMERIC(12,2)` lakhs by `0002_rupees`, ×100000 conversion) to mirror the frontend
+> contract (`sanctionedRs: number`, integer). Dates are `DATE`; timestamps are `TIMESTAMPTZ`.
 > Enum values are plain `TEXT` columns with CHECK-style validation in Pydantic (simplest to
 > migrate; switch to native PG enums only if a future decision requires it).
 
@@ -38,8 +39,8 @@ erDiagram
         text district
         text agency
         text status
-        numeric sanctioned_lakh
-        numeric expenditure_lakh
+        bigint sanctioned_rs
+        bigint expenditure_rs
         int progress_pct
         date sanction_date
         date due_date
@@ -51,7 +52,7 @@ erDiagram
         text department
         int labour_deployed
         int demanded_days
-        numeric returned_lakh
+        bigint returned_rs
         timestamptz created_at
         timestamptz updated_at
     }
@@ -62,8 +63,8 @@ erDiagram
         text severity
         text headline
         int peer_n
-        numeric peer_median_lakh "nullable"
-        numeric actual_lakh "nullable"
+        bigint peer_median_rs "nullable"
+        bigint actual_rs "nullable"
         text unit "literal L-rupee symbol"
         text corroboration
         text detector_version
@@ -140,8 +141,8 @@ Column ↔ frontend field mapping is 1:1 with `workSchema` in `admin-dashboard/s
 | `district` | `TEXT` | NOT NULL |
 | `agency` | `TEXT` | NOT NULL |
 | `status` | `TEXT` | `in-execution \| completed \| sanctioned \| stalled` |
-| `sanctioned_lakh` | `NUMERIC(12,2)` | ≥ 0 |
-| `expenditure_lakh` | `NUMERIC(12,2)` | ≥ 0 |
+| `sanctioned_rs` | `BIGINT` | ≥ 0, integer rupees |
+| `expenditure_rs` | `BIGINT` | ≥ 0, integer rupees |
 | `progress_pct` | `SMALLINT` | 0–100 |
 | `sanction_date` | `DATE` | `yyyy-MM-dd` over the wire |
 | `due_date` | `DATE` | `yyyy-MM-dd` |
@@ -153,7 +154,7 @@ Column ↔ frontend field mapping is 1:1 with `workSchema` in `admin-dashboard/s
 | `department` | `TEXT` | NOT NULL |
 | `labour_deployed` | `INTEGER` | ≥ 0 |
 | `demanded_days` | `INTEGER` | ≥ 1 |
-| `returned_lakh` | `NUMERIC(12,2)` | ≥ 0, and ≤ `sanctioned_lakh - expenditure_lakh` headroom (enforced by seed logic; soft CHECK deferred to ingest validation) |
+| `returned_rs` | `BIGINT` | ≥ 0, and ≤ `sanctioned_rs - expenditure_rs` headroom (enforced by seed logic; soft CHECK deferred to ingest validation) |
 | `created_at` / `updated_at` | `TIMESTAMPTZ` | NOT NULL defaults |
 
 Indexes:
@@ -177,9 +178,9 @@ peer semantics that produced `peerN: 18` for W-1014 (community-hall works in Mad
 | `severity` | `TEXT` | `high \| medium \| low` |
 | `headline` | `TEXT` | NOT NULL |
 | `peer_n` | `INTEGER` | ≥ 8 (contract minimum) |
-| `peer_median_lakh` | `NUMERIC(12,2)` | NULLABLE (delay/duplicate have none) |
-| `actual_lakh` | `NUMERIC(12,2)` | NULLABLE |
-| `unit` | `TEXT` | NOT NULL, constant the rupee-lakh glyph `₹L` |
+| `peer_median_rs` | `BIGINT` | NULLABLE (delay/duplicate have none), ₹10k-rounded |
+| `actual_rs` | `BIGINT` | NULLABLE |
+| `unit` | `TEXT` | NOT NULL, constant the rupee glyph `₹` |
 | `corroboration` | `TEXT` | NOT NULL |
 | `detector_version` | `TEXT` | NOT NULL, e.g. `rules-1.0` — recompute replaces rows with a new version |
 | `detector_inputs` | `JSONB` | The formula's inputs at detection time (audit trail for "why flagged") |
@@ -254,5 +255,5 @@ Index: `ix_decisions_work_id_at` on (`work_id`, `at` DESC).
   stalled (>90d no update), overdue (non-completed past due date); sorted by kind rank
   (high-risk → stall → uc → overdue) then age descending.
 - **KPI snapshot** (`GET /overview/kpis`): `MPLADS_KPIS` constants until real ingest exists —
-  `{totalWorks: 12482, underExecution: 4821, delayed: 386, highRisk: 73, overrunExposureLakh: 41}`,
+  `{totalWorks: 28410, underExecution: 9120, delayed: 1140, highRisk: 214, overrunExposureRs: 1284000000}`,
   labeled "scheme snapshot"; works/anomalies endpoints serve the 40-work "demo sample".

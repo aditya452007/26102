@@ -28,7 +28,7 @@ diverge.
 { "query": "community hall", "total": 3, "results": [
   { "id": "W-1014", "title": "Community Hall Construction",
     "district": "Bhopal", "state": "Madhya Pradesh",
-    "sanctionedLakh": 58.9, "severity": "high", "status": "stalled" } ] }
+    "sanctionedRs": 19000000, "severity": "high", "status": "stalled" } ] }
 ```
 
 Same search semantics as SPEC 03b (`id/title/agency` substring, case-insensitive); `limit`
@@ -41,7 +41,7 @@ contain their district — the copilot cannot leak out-of-scope rows).
 // 200 — ToolWorkOut (compact work card + current decision, for "tell me about W-1014")
 { "id": "W-1014", "title": "Community Hall Construction", "type": "community-hall",
   "agency": "PWD Bhopal", "district": "Bhopal", "state": "Madhya Pradesh",
-  "status": "stalled", "sanctionedLakh": 58.9, "expenditureLakh": 41.2,
+  "status": "stalled", "sanctionedRs": 19000000, "expenditureRs": 13300000,
   "progressPct": 62, "stalledDays": 96,
   "severity": "high",
   "decision": { "status": "action-required", "at": "…", "by": "…" } }   // latest or null
@@ -53,10 +53,10 @@ contain their district — the copilot cannot leak out-of-scope rows).
 
 ```jsonc
 // 200 — ToolCompareOut (the "compare these two works" brain path)
-{ "works": [ { "id": "W-1014", "sanctionedLakh": 58.9, "progressPct": 62,
-               "peerMedianLakh": 24.6, "peerN": 18, "severity": "high" },
-             { "id": "W-1032", "sanctionedLakh": 25.1, "progressPct": 48,
-               "peerMedianLakh": 24.6, "peerN": 18, "severity": null } ],
+{ "works": [ { "id": "W-1014", "sanctionedRs": 19000000, "progressPct": 62,
+               "peerMedianRs": 7800000, "peerN": 18, "severity": "high" },
+             { "id": "W-1032", "sanctionedRs": 2510000, "progressPct": 48,
+               "peerMedianRs": 2460000, "peerN": 18, "severity": null } ],
   "peerGroup": { "type": "community-hall", "state": "Madhya Pradesh" } }
 ```
 
@@ -70,7 +70,7 @@ bar exactly. Ids outside scope are dropped silently (compare what you may see).
 // 200 — ToolExplainOut ("why was this flagged?" in one payload)
 { "anomalyId": "A-1", "workId": "W-1014", "kind": "cost", "severity": "high",
   "headline": "Cost 2.4× peer median",
-  "peerN": 18, "peerMedianLakh": 24.6, "actualLakh": 58.9, "unit": "₹L",
+  "peerN": 18, "peerMedianRs": 7800000, "actualRs": 19000000, "unit": "₹",
   "signals": [ { "label": "No progress update", "value": "96 days" } ],
   "corroboration": "Warrants manual review — spend and execution both deviate.",
   "detectorInputs": { "ratio": 2.4 } }
@@ -96,5 +96,5 @@ anomaly; 404 when the parent work is out of scope.
   key-for-key (same discipline as `api-reference.md`).
 - Scope test: district officer's `/copilot/search?q=hall` never returns another district's
   work; `/copilot/explain/{A-1}` for an out-of-scope work → 404.
-- Consistency test: `comparePeers` median for W-1014 equals the dossier's `peerMedianLakh`
+- Consistency test: `comparePeers` median for W-1014 equals the dossier's `peerMedianRs`
   and SPEC 00's pinned `24.6`.

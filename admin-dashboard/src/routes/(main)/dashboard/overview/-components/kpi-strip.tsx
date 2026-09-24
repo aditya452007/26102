@@ -2,17 +2,26 @@ import { AlertTriangle, Banknote, Clock3, LayoutDashboard, Loader, TrendingDown,
 
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { MPLADS_KPIS } from "@/lib/mplads-mock";
+import { formatMoneyRs, MPLADS_KPIS } from "@/lib/mplads-mock";
 
 const POSITIVE_BADGE =
   "border-green-200 bg-green-500/10 text-green-700 dark:border-green-900/40 dark:bg-green-500/15 dark:text-green-300";
 const NEGATIVE_BADGE = "border-destructive/20 bg-destructive/10 text-destructive";
 
-const KPI_CARDS = [
+export interface KpiValues {
+  totalWorks: number;
+  underExecution: number;
+  delayed: number;
+  highRisk: number;
+  overrunExposureRs: number;
+}
+
+function buildKpiCards(kpis: KpiValues) {
+  return [
   {
     icon: LayoutDashboard,
     title: "Total Works",
-    value: MPLADS_KPIS.totalWorks.toLocaleString("en-IN"),
+    value: kpis.totalWorks.toLocaleString("en-IN"),
     badge: (
       <Badge variant="outline" className={POSITIVE_BADGE}>
         <TrendingUp className="size-3" />
@@ -24,7 +33,7 @@ const KPI_CARDS = [
   {
     icon: Loader,
     title: "Under Execution",
-    value: MPLADS_KPIS.underExecution.toLocaleString("en-IN"),
+    value: kpis.underExecution.toLocaleString("en-IN"),
     badge: (
       <Badge variant="outline" className={POSITIVE_BADGE}>
         +3.4%
@@ -35,7 +44,7 @@ const KPI_CARDS = [
   {
     icon: Clock3,
     title: "Delayed",
-    value: MPLADS_KPIS.delayed.toLocaleString("en-IN"),
+    value: kpis.delayed.toLocaleString("en-IN"),
     badge: (
       <Badge variant="outline" className={NEGATIVE_BADGE}>
         <TrendingDown className="size-3" />
@@ -47,7 +56,7 @@ const KPI_CARDS = [
   {
     icon: AlertTriangle,
     title: "High Risk",
-    value: MPLADS_KPIS.highRisk.toLocaleString("en-IN"),
+    value: kpis.highRisk.toLocaleString("en-IN"),
     badge: (
       <Badge variant="outline" className={NEGATIVE_BADGE}>
         9 new
@@ -58,20 +67,22 @@ const KPI_CARDS = [
   {
     icon: Banknote,
     title: "Overrun exposure",
-    value: `₹${MPLADS_KPIS.overrunExposureLakh}L`,
+    value: formatMoneyRs(kpis.overrunExposureRs),
     badge: (
       <Badge variant="outline" className={NEGATIVE_BADGE}>
-        +₹6L
+        +{formatMoneyRs(6200000)}
       </Badge>
     ),
     caption: "Above peer estimates",
   },
 ];
+}
 
-export function KpiStrip() {
+export function KpiStrip({ kpis = MPLADS_KPIS }: { readonly kpis?: KpiValues }) {
+  const cards = buildKpiCards(kpis);
   return (
     <div className="grid grid-cols-1 gap-4 *:data-[slot=card]:bg-linear-to-t *:data-[slot=card]:from-primary/5 *:data-[slot=card]:to-card *:data-[slot=card]:shadow-xs md:grid-cols-3 xl:grid-cols-5 dark:*:data-[slot=card]:bg-card">
-      {KPI_CARDS.map((card) => (
+      {cards.map((card) => (
         <Card key={card.title}>
           <CardHeader>
             <CardTitle>

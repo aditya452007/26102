@@ -127,7 +127,7 @@ function Page() {
 
   const { work, flags, evidence, activity, stallDays, utilisationPct } = dossier;
   const topFlag = flags[0];
-  const { data: series, peerLabel } = spendSeries(work, topFlag?.peerMedianLakh ?? null);
+  const { data: series, peerLabel } = spendSeries(work, topFlag?.peerMedianRs ?? null);
   const milestones = milestonesFor(work);
   const severity = topFlag ? topFlag.severity : "clear";
   const ucPending = flags.some((flag) => flag.kind === "utilisation");
