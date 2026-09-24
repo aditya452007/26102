@@ -184,7 +184,7 @@ time — implementation choice, values identical either way.)
    dates as strings. Note: TS `date-fns subDays` on `new Date(2026, 8, 7)` is local-time but
    only y/m/d are consumed — safe.
 4. Pinned assertions: W-1014 values (§3), and A-1 signal 1 =
-   `₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal`.
+   `₹1.90 Cr vs ₹0.78 Cr median across 18 similar community-hall works in Bhopal`.
 5. mulberry32 vectors from §1.
 6. Fixture drift (mock file edited) fails the test → update both sides in one commit + ADR.
 

@@ -55,10 +55,10 @@ MPLADS_KPIS = {
 
 
 def format_money_rs(rs: int) -> str:
-    """TS formatMoneyRs: `₹1.90 Cr` at/above ₹1 Cr, else `₹78.0L`."""
-    if rs >= 10_000_000:
-        return f"₹{rs / 10_000_000:.2f} Cr"
-    return f"₹{rs / 100_000:.1f}L"
+    """TS formatMoneyRs: always crores (`₹1.90 Cr`), exact zero renders `₹0`."""
+    if rs == 0:
+        return "₹0"
+    return f"₹{rs / 10_000_000:.2f} Cr"
 
 
 def compare_sentence(actual: int, median: int, peer_n: int, wtype: str, district: str) -> str:

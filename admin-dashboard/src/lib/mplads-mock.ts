@@ -116,12 +116,12 @@ function dayString(date: Date): string {
   return format(date, "yyyy-MM-dd");
 }
 
-/** Adaptive government display: lakhs below ₹1 Cr, crores at and above. */
+/** Government display: always crores (₹0.78 Cr), exact zero renders ₹0. */
 export function formatMoneyRs(rs: number): string {
-  if (rs >= 10000000) {
-    return `₹${(rs / 10000000).toFixed(2)} Cr`;
+  if (rs === 0) {
+    return "₹0";
   }
-  return `₹${(rs / 100000).toFixed(1)}L`;
+  return `₹${(rs / 10000000).toFixed(2)} Cr`;
 }
 
 export function formatINR(rs: number): string {

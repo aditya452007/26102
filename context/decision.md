@@ -35,6 +35,7 @@
 
 | ID | Date | Decision | Status | Affects |
 |----|------|----------|--------|----------|
+| ADR-036 | 2026-09-24 | District-less polygons resolve to state name + state counts; clicks stay district-only | Accepted | india-geo.ts, overview data.ts/india-risk-map.tsx/route.tsx |
 | ADR-035 | 2026-09-24 | Map empty-states + 144-work sample + full rupee migration (contract, seed, entities, engine, UI, docs); supersedes ADR-034 lane + bumps 010 pageSize 100→200 | Accepted | mplads-schema/mock, overview/*, india-geo, server/mplads, backend seed/db/engine/tests, alembic 0002, all backend docs, Feature_docs 00–05 |
 | ADR-034 | 2026-09-24 | Backend money migrates lakh-float → rupee-int (wire `*Rs` ints, `unit "₹"`, `round_10k` medians, ₹10L guard = 1000000); sibling worker owns entities/helpers/seed | Accepted (lane record; completed end-to-end by ADR-035) | backend/app/features/{works,anomalies,overview}/**, engine/*, tests/test_{detectors,contract_*} |
 | ADR-033 | 2026-09-19 | Overview backend-first with seed fallback: single /healthz probe per visit, Zod-validated bundle server fn returning { ok:false } on any failure, demo-ministry server login, role lens stays client-side | Accepted | admin-dashboard/src/server/mplads/*, dashboard/overview/* |
@@ -89,6 +90,16 @@
 ---
 
 ## Decision Entries
+
+### ADR-036: District-less polygons resolve to state name + state counts (Unknown-area fix)
+- **Date**: 2026-09-24
+- **Status**: Accepted
+- **Context**: Page feedback on `/dashboard/overview?district=Unknown`: hovering showed `Unknown area · no works in demo sample`. Root cause: 34/760 GeoJSON features have no `district` prop (state remainders); `districtLabel()` had no state fallback.
+- **Options considered**: Seeding works into more districts (rejected — geometry/dataset churn for a label bug); making remainder polygons hover-only with state text but grey fill (rejected — color carries the risk signal, same helper costs one line).
+- **Decision**: `districtLabel()` returns `st_nm` when `district` is absent; new `scopedStateGeo()` rollup flows to the map as `states`; remainder polygons tooltip + fill from their state aggregate; clicks remain district-only. Zero-work states read `State · no works in demo sample` — named, never unknown.
+- **Why**: The polygon *is* state territory, so state counts are the honest content; a click would set a `?district=` filter that matches nothing.
+- **Consequences**: `getOverviewData*` return shape gains `states`; no contract/schema change.
+- **Affects**: `india-geo.ts`, overview `data.ts` / `india-risk-map.tsx` / `route.tsx`, flow.md triage line.
 
 ### ADR-035: Map empty-states + denser sample + rupee-integer money (full scope)
 - **Date**: 2026-09-24

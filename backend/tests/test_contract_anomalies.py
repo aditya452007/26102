@@ -23,7 +23,7 @@ def test_list_shape_and_seed_total(client, ministry_token):
         "peerMedianRs", "actualRs", "unit", "corroboration", "signals",
     }
     assert a["signals"][0]["value"] == (
-        "₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal"
+        "₹1.90 Cr vs ₹0.78 Cr median across 18 similar community-hall works in Bhopal"
     )
 
 
