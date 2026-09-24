@@ -157,10 +157,10 @@ by the generator (`seed-generator.md §5`).
 
 ## Demo data facts (asserted by tests)
 
-- 40 works across 6 states × 12 districts; 12 anomalies (5 high / 4 medium / 3 low); 6 evidence
+- 144 works across 6 states × 12 districts (12 per district); 24 anomalies (8 high / 9 medium / 7 low); 6 evidence
   files; 33 activity rows; 6-state geo rollup.
-- Flagship `W-1014`: community-hall, Bhopal, sanctioned ₹58.9L, expenditure ₹41.2L, progress 62%,
-  status stalled, last update 96d before 2026-09-07, cost flag with `peerMedianLakh: 24.6`,
-  `peerN: 18`, `actualLakh: 58.9`.
+- Flagship `W-1014`: community-hall, Bhopal, sanctioned ₹1.90 Cr, expenditure ₹1.33 Cr, progress 62%,
+  status stalled, last update 96d before 2026-09-07, cost flag with `peerMedianRs: 7800000`,
+  `peerN: 18`, `actualRs: 19000000`.
 - `DEMO_TODAY = 2026-09-07` is a config constant (`DEMO_TODAY_ISO`), never `date.today()`, so the
   demo is reproducible. Switching to real ingest means replacing this constant, not the code.

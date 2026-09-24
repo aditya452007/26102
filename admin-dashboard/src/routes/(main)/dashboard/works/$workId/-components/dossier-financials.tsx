@@ -2,7 +2,7 @@ import { CartesianGrid, Label, Line, LineChart, Pie, PieChart, XAxis, YAxis } fr
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { formatLakh } from "@/lib/mplads-mock";
+import { formatMoneyRs } from "@/lib/mplads-mock";
 import type { Work } from "@/lib/mplads-schema";
 
 import type { SpendPoint } from "./dossier-data";
@@ -32,22 +32,22 @@ interface FundSlice {
 }
 
 export function DossierFinancials({ work, series, peerLabel }: DossierFinancialsProps) {
-  const utilisationPct = work.sanctionedLakh > 0 ? (work.expenditureLakh / work.sanctionedLakh) * 100 : 0;
-  const returnedLakh = work.returnedLakh;
-  const balanceLakh = Math.max(work.sanctionedLakh - work.expenditureLakh - returnedLakh, 0);
+  const utilisationPct = work.sanctionedRs > 0 ? (work.expenditureRs / work.sanctionedRs) * 100 : 0;
+  const returnedRs = work.returnedRs;
+  const balanceRs = Math.max(work.sanctionedRs - work.expenditureRs - returnedRs, 0);
   const slices: FundSlice[] = [
-    { account: "Spent", amount: work.expenditureLakh, key: "spent", percentage: utilisationPct },
+    { account: "Spent", amount: work.expenditureRs, key: "spent", percentage: utilisationPct },
     {
       account: "Returned",
-      amount: returnedLakh,
+      amount: returnedRs,
       key: "returned",
-      percentage: work.sanctionedLakh > 0 ? (returnedLakh / work.sanctionedLakh) * 100 : 0,
+      percentage: work.sanctionedRs > 0 ? (returnedRs / work.sanctionedRs) * 100 : 0,
     },
     {
       account: "Balance",
-      amount: balanceLakh,
+      amount: balanceRs,
       key: "balance",
-      percentage: work.sanctionedLakh > 0 ? (balanceLakh / work.sanctionedLakh) * 100 : 0,
+      percentage: work.sanctionedRs > 0 ? (balanceRs / work.sanctionedRs) * 100 : 0,
     },
   ];
   const fundConfig = {
@@ -151,7 +151,7 @@ export function DossierFinancials({ work, series, peerLabel }: DossierFinancials
                             x={viewBox.cx}
                             y={(viewBox.cy ?? 0) + 14}
                           >
-                            {formatLakh(work.sanctionedLakh)}
+                            {formatMoneyRs(work.sanctionedRs)}
                           </tspan>
                         </text>
                       );
@@ -172,7 +172,7 @@ export function DossierFinancials({ work, series, peerLabel }: DossierFinancials
                       />
                       <p className="truncate text-muted-foreground text-xs">{item.account}</p>
                     </div>
-                    <p className="font-medium tabular-nums">{formatLakh(item.amount)}</p>
+                    <p className="font-medium tabular-nums">{formatMoneyRs(item.amount)}</p>
                   </div>
                   <div className="font-medium tabular-nums">{item.percentage.toFixed(0)}%</div>
                 </div>

@@ -7,6 +7,7 @@ the parity test compares this output key-for-key with the TS fixture.
 
 from datetime import date, timedelta
 
+from app.common.mathutil import round_10k
 from app.seed.rng import format_work_date, mulberry32, one_decimal, rand_int, shuffled
 
 MPLADS_SEED = 26102
@@ -38,26 +39,32 @@ FLAG_PLAN = [
     ("delay", "high"), ("expenditure", "high"), ("delay", "medium"),
     ("delay", "medium"), ("utilisation", "medium"), ("cost", "medium"),
     ("expenditure", "low"), ("delay", "low"), ("utilisation", "low"),
+    ("cost", "high"), ("duplicate", "high"), ("delay", "high"),
+    ("expenditure", "medium"), ("cost", "medium"), ("utilisation", "medium"),
+    ("delay", "medium"), ("cost", "low"), ("expenditure", "low"),
+    ("delay", "low"), ("utilisation", "low"), ("duplicate", "medium"),
 ]
 
 MPLADS_KPIS = {
-    "totalWorks": 12482,
-    "underExecution": 4821,
-    "delayed": 386,
-    "highRisk": 73,
-    "overrunExposureLakh": 41,
+    "totalWorks": 28410,
+    "underExecution": 9120,
+    "delayed": 1140,
+    "highRisk": 214,
+    "overrunExposureRs": 1284000000,
 }
 
 
-def format_lakh(lakh: float) -> str:
-    """TS formatLakh: `₹58.9L`."""
-    return f"₹{lakh:.1f}L"
+def format_money_rs(rs: int) -> str:
+    """TS formatMoneyRs: `₹1.90 Cr` at/above ₹1 Cr, else `₹78.0L`."""
+    if rs >= 10_000_000:
+        return f"₹{rs / 10_000_000:.2f} Cr"
+    return f"₹{rs / 100_000:.1f}L"
 
 
-def compare_sentence(actual: float, median: float, peer_n: int, wtype: str, district: str) -> str:
+def compare_sentence(actual: int, median: int, peer_n: int, wtype: str, district: str) -> str:
     """The canonical compare sentence, verbatim from mplads-mock.ts."""
     return (
-        f"{format_lakh(actual)} vs {format_lakh(median)} median across "
+        f"{format_money_rs(actual)} vs {format_money_rs(median)} median across "
         f"{peer_n} similar {wtype} works in {district}"
     )
 
@@ -115,15 +122,15 @@ def build_works() -> list[dict]:
     rng = mulberry32(MPLADS_SEED)
     extra_rng = mulberry32(MPLADS_SEED + 500)
 
-    # Pre-loop status shuffle: 18 + 7 + 7 + 7 = 39 items → 38 draws
+    # Pre-loop status shuffle: 66 + 26 + 26 + 25 = 143 items → 142 draws
     rest_statuses = shuffled(
         rng,
-        ["in-execution"] * 18 + ["stalled"] * 7 + ["completed"] * 7 + ["sanctioned"] * 7,
+        ["in-execution"] * 66 + ["stalled"] * 26 + ["completed"] * 26 + ["sanctioned"] * 25,
     )
     status_cursor = 0
     works: list[dict] = []
 
-    for index in range(40):
+    for index in range(144):
         work_id = f"W-{1001 + index}"
         place = DISTRICTS[index % 12]
         is_flagship = work_id == FLAGSHIP_WORK_ID
@@ -133,9 +140,9 @@ def build_works() -> list[dict]:
             status = "stalled"
             title = "Community Hall — Ward Block 7"
             agency = "Contractor-07"
-            sanctioned = 58.9
+            sanctioned = 19000000
             progress = 62
-            expenditure = 41.2
+            expenditure = 13300000
             sanction_date = date(2024, 11, 20)
             due_date = date(2025, 10, 15)
             last_update = DEMO_TODAY - timedelta(days=96)
@@ -144,16 +151,16 @@ def build_works() -> list[dict]:
             department = "PWD"
             labour = 42
             demanded_days = 330
-            returned = 0.0
+            returned = 0
         else:
             wtype = WORK_TYPES[rand_int(rng, 0, len(WORK_TYPES) - 1)]
             status = rest_statuses[status_cursor]
             status_cursor += 1
             title = _title_for(wtype, rand_int(rng, 1, 24))
             agency = _agency_for(rng)
-            sanctioned = one_decimal(4 + rng() * 86)
+            sanctioned = round_10k(800000 + rng() * 27200000)
             progress = _progress_for(rng, status)
-            expenditure = one_decimal(sanctioned * _spend_ratio_for(rng, status))
+            expenditure = round_10k(sanctioned * _spend_ratio_for(rng, status))
             sanction_date = date(2023, 4, 1) + timedelta(days=rand_int(rng, 0, 820))
             due_date = sanction_date + timedelta(days=270 + rand_int(rng, 0, 270))
             last_update = _last_update_for(rng, status)
@@ -162,10 +169,10 @@ def build_works() -> list[dict]:
             department = DEPARTMENTS[rand_int(extra_rng, 0, len(DEPARTMENTS) - 1)]
             labour = rand_int(extra_rng, 8, 60)
             demanded_days = rand_int(extra_rng, 180, 540)
-            returned = 0.0
+            returned = 0
             if extra_rng() >= 0.7:  # flagship never reaches this draw (short-circuit in TS)
-                headroom = max(sanctioned - expenditure, 0.0)
-                returned = one_decimal(min(extra_rng() * min(5, sanctioned * 0.15), headroom))
+                headroom = max(sanctioned - expenditure, 0)
+                returned = round_10k(min(extra_rng() * min(1200000, sanctioned * 0.15), headroom))
 
         lat = one_decimal((23.26 if is_flagship else place[2]) + (rng() - 0.5) * 0.2)
         lon = one_decimal((77.41 if is_flagship else place[3]) + (rng() - 0.5) * 0.2)
@@ -178,8 +185,8 @@ def build_works() -> list[dict]:
             "district": district,
             "agency": agency,
             "status": status,
-            "sanctionedLakh": sanctioned,
-            "expenditureLakh": expenditure,
+            "sanctionedRs": sanctioned,
+            "expenditureRs": expenditure,
             "progressPct": progress,
             "sanctionDate": sanction_date.isoformat(),
             "dueDate": due_date.isoformat(),
@@ -191,7 +198,7 @@ def build_works() -> list[dict]:
             "department": department,
             "labourDeployed": labour,
             "demandedDays": demanded_days,
-            "returnedLakh": returned,
+            "returnedRs": returned,
         })
     return works
 
@@ -207,9 +214,9 @@ def build_anomaly(work: dict, kind: str, severity: str, index: int, works: list[
         "kind": kind,
         "severity": severity,
         "peerN": peer_n,
-        "peerMedianLakh": None,
-        "actualLakh": None,
-        "unit": "₹L",
+        "peerMedianRs": None,
+        "actualRs": None,
+        "unit": "₹",
     }
 
     if kind == "delay":
@@ -236,7 +243,7 @@ def build_anomaly(work: dict, kind: str, severity: str, index: int, works: list[
         )
         base |= {
             "headline": f"Possible overlapping scope with a nearby {work['type']} work — needs review",
-            "actualLakh": work["sanctionedLakh"],
+            "actualRs": work["sanctionedRs"],
             "corroboration": (
                 f"Same type and district as {twin['id']} ({twin['title']}); site extents need a joint review."
                 if twin else
@@ -250,38 +257,38 @@ def build_anomaly(work: dict, kind: str, severity: str, index: int, works: list[
                         if twin else "Matched on type + district + sanction window"
                     ),
                 },
-                {"label": "Sanctioned cost", "value": format_lakh(work["sanctionedLakh"])},
+                {"label": "Sanctioned cost", "value": format_money_rs(work["sanctionedRs"])},
             ],
         }
         return base
 
     if kind == "expenditure":
         ratio = 1.6 + rng() * 0.6 if severity == "high" else 1.2 + rng() * 0.2
-        peer_median = one_decimal(work["expenditureLakh"] / ratio)
+        peer_median = round_10k(work["expenditureRs"] / ratio)
         base |= {
             "headline": "Front-loaded spending pattern — needs review",
-            "peerMedianLakh": peer_median,
-            "actualLakh": work["expenditureLakh"],
-            "corroboration": f"Released {format_lakh(work['expenditureLakh'])} against {work['progressPct']}% physical progress.",
+            "peerMedianRs": peer_median,
+            "actualRs": work["expenditureRs"],
+            "corroboration": f"Released {format_money_rs(work['expenditureRs'])} against {work['progressPct']}% physical progress.",
             "signals": [
                 {"label": "Peer comparison", "value": compare_sentence(
-                    work["expenditureLakh"], peer_median, peer_n, work["type"], work["district"])},
+                    work["expenditureRs"], peer_median, peer_n, work["type"], work["district"])},
                 {"label": "Progress vs spend",
-                 "value": f"{work['progressPct']}% progress at {format_lakh(work['expenditureLakh'])} released"},
+                 "value": f"{work['progressPct']}% progress at {format_money_rs(work['expenditureRs'])} released"},
             ],
         }
         return base
 
     if kind == "utilisation":
-        peer_median = one_decimal(work["sanctionedLakh"] * (0.55 + rng() * 0.2))
+        peer_median = round_10k(work["sanctionedRs"] * (0.55 + rng() * 0.2))
         base |= {
             "headline": "Low fund utilisation with utilisation certificate pending — needs review",
-            "peerMedianLakh": peer_median,
-            "actualLakh": work["expenditureLakh"],
+            "peerMedianRs": peer_median,
+            "actualRs": work["expenditureRs"],
             "corroboration": "Utilisation certificate for the last released tranche is still awaited from the agency.",
             "signals": [
                 {"label": "Peer comparison", "value": compare_sentence(
-                    work["expenditureLakh"], peer_median, peer_n, work["type"], work["district"])},
+                    work["expenditureRs"], peer_median, peer_n, work["type"], work["district"])},
                 {"label": "Certificate status", "value": "UC pending for last tranche"},
             ],
         }
@@ -289,26 +296,26 @@ def build_anomaly(work: dict, kind: str, severity: str, index: int, works: list[
 
     # cost
     if is_flagship:
-        ratio = 58.9 / 24.6
-        peer_median = 24.6
+        ratio = 19000000 / 7800000
+        peer_median = 7800000
     else:
         ratio = 2.0 + rng() * 0.6 if severity == "high" else 1.4 + rng() * 0.5
-        peer_median = one_decimal(work["sanctionedLakh"] / ratio)
+        peer_median = round_10k(work["sanctionedRs"] / ratio)
     base |= {
         "headline": (
             "Sanctioned cost 2.4× peer median with a 96d stall — needs review"
             if is_flagship else "Sanctioned cost above peer median — needs review"
         ),
-        "peerMedianLakh": peer_median,
-        "actualLakh": work["sanctionedLakh"],
+        "peerMedianRs": peer_median,
+        "actualRs": work["sanctionedRs"],
         "corroboration": (
             "Single-estimate sanction plus a 96-day stall corroborates the cost variance."
             if is_flagship else
             "Single-estimate sanction with limited comparative quotes corroborates the variance."
         ),
-        "signals": [
-            {"label": "Peer comparison", "value": compare_sentence(
-                work["sanctionedLakh"], peer_median, peer_n, work["type"], work["district"])},
+            "signals": [
+                {"label": "Peer comparison", "value": compare_sentence(
+                    work["sanctionedRs"], peer_median, peer_n, work["type"], work["district"])},
             {"label": "Corroborating signal",
              "value": f"96d stall — last update {_stall_label(date.fromisoformat(work['lastUpdate']))}"
                       if is_flagship else "Estimate variance beyond peer band"},
@@ -362,7 +369,7 @@ def build_activities(anomalies: list[dict]) -> list[dict]:
     activities: list[dict] = []
     counter = 1
     for index, anomaly in enumerate(anomalies):
-        note_count = 2 if index == 0 else 1 if index < 8 else 0
+        note_count = 2 if index == 0 else 1 if index < 16 else 0
         activities.append({
             "id": f"T-{counter}",
             "workId": anomaly["workId"],

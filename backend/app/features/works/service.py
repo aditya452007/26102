@@ -38,8 +38,8 @@ def _work_out(w) -> WorkOut:
         district=w.district,
         agency=w.agency,
         status=w.status,
-        sanctioned_lakh=float(w.sanctioned_lakh),
-        expenditure_lakh=float(w.expenditure_lakh),
+        sanctioned_rs=int(w.sanctioned_rs),
+        expenditure_rs=int(w.expenditure_rs),
         progress_pct=w.progress_pct,
         sanction_date=w.sanction_date,
         due_date=w.due_date,
@@ -51,7 +51,7 @@ def _work_out(w) -> WorkOut:
         department=w.department,
         labour_deployed=w.labour_deployed,
         demanded_days=w.demanded_days,
-        returned_lakh=float(w.returned_lakh),
+        returned_rs=int(w.returned_rs),
     )
 
 
@@ -63,8 +63,8 @@ def _anomaly_out(a, signals: list) -> AnomalyOut:
         severity=a.severity,
         headline=a.headline,
         peer_n=a.peer_n,
-        peer_median_lakh=float(a.peer_median_lakh) if a.peer_median_lakh is not None else None,
-        actual_lakh=float(a.actual_lakh) if a.actual_lakh is not None else None,
+        peer_median_rs=int(a.peer_median_rs) if a.peer_median_rs is not None else None,
+        actual_rs=int(a.actual_rs) if a.actual_rs is not None else None,
         unit=a.unit,
         corroboration=a.corroboration,
         signals=[SignalOut(label=s.label, value=s.value) for s in signals],
@@ -94,7 +94,7 @@ def list_works(claims: OfficerClaims, f: WorkFilters) -> Page[WorkRowOut]:
                 type=w.type,
                 district=w.district,
                 state=w.state,
-                sanctioned_lakh=float(w.sanctioned_lakh),
+                sanctioned_rs=int(w.sanctioned_rs),
                 progress_pct=w.progress_pct,
                 status=w.status,
                 last_update=w.last_update,
@@ -183,8 +183,8 @@ def _peer_comparison_impl(work_id: str, claims: OfficerClaims, today: date) -> P
         rows=[
             PeerRowOut(
                 metric="expenditure",
-                work_value=float(work.expenditure_lakh),
-                peer_median=one_decimal(median(float(p.expenditure_lakh) for p in peers)),
+                work_value=int(work.expenditure_rs),
+                peer_median=int(median(int(p.expenditure_rs) for p in peers)),
             ),
             PeerRowOut(
                 metric="progress",
@@ -200,7 +200,7 @@ def _peer_comparison_impl(work_id: str, claims: OfficerClaims, today: date) -> P
             ),
         ],
         members=[
-            PeerMemberOut(id=p.id, title=p.title, sanctioned_lakh=float(p.sanctioned_lakh))
+            PeerMemberOut(id=p.id, title=p.title, sanctioned_rs=int(p.sanctioned_rs))
             for p in members
         ],
     )

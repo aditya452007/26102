@@ -8,7 +8,7 @@ class KpiOut(CamelModel):
     under_execution: int
     delayed: int
     high_risk: int
-    overrun_exposure_lakh: int
+    overrun_exposure_rs: int
 
 
 class GeoRowOut(CamelModel):

@@ -31,7 +31,7 @@ def kpis() -> KpiOut:
         under_execution=MPLADS_KPIS["underExecution"],
         delayed=MPLADS_KPIS["delayed"],
         high_risk=MPLADS_KPIS["highRisk"],
-        overrun_exposure_lakh=MPLADS_KPIS["overrunExposureLakh"],
+        overrun_exposure_rs=MPLADS_KPIS["overrunExposureRs"],
     )
 
 
@@ -83,7 +83,7 @@ def _queue_impl(claims: OfficerClaims, today: date, limit: int) -> list[WorkRowO
             type=w.type,
             district=w.district,
             state=w.state,
-            sanctioned_lakh=float(w.sanctioned_lakh),
+            sanctioned_rs=int(w.sanctioned_rs),
             progress_pct=w.progress_pct,
             status=w.status,
             last_update=w.last_update,

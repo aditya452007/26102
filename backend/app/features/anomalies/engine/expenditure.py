@@ -7,8 +7,8 @@ suspicious pattern; a 95%-done work naturally has high cumulative spend).
 
 import pandas as pd
 
-from app.common.mathutil import one_decimal
-from app.common.text import compare_sentence, format_lakh
+from app.common.mathutil import round_10k
+from app.common.text import compare_sentence, format_money_rs
 from app.features.anomalies.engine.peers import peer_stats
 from app.features.anomalies.engine.registry import Frames, MIN_PEERS
 
@@ -20,14 +20,14 @@ def detect(frames: Frames, today) -> list[dict]:
     stats = peer_stats(frames)
     j = works.join(stats)
     eligible = j[(j["peer_n"] >= MIN_PEERS) & (j["progress_pct"] <= 60)].copy()
-    eligible["ratio"] = eligible["expenditure_lakh"] / eligible["median_expenditure"]
+    eligible["ratio"] = eligible["expenditure_rs"] / eligible["median_expenditure"]
     flagged = eligible[eligible["ratio"] >= 1.2]
 
     out: list[dict] = []
     for _, row in flagged.iterrows():
         severity = "high" if row["ratio"] >= 1.6 else "medium"
-        peer_median = one_decimal(row["median_expenditure"])
-        expenditure = float(row["expenditure_lakh"])
+        peer_median = round_10k(row["median_expenditure"])
+        expenditure = int(row["expenditure_rs"])
         out.append(
             {
                 "work_id": row.name,
@@ -35,10 +35,10 @@ def detect(frames: Frames, today) -> list[dict]:
                 "severity": severity,
                 "headline": HEADLINE,
                 "peer_n": int(row["peer_n"]),
-                "peer_median_lakh": peer_median,
-                "actual_lakh": expenditure,
+                "peer_median_rs": peer_median,
+                "actual_rs": expenditure,
                 "corroboration": (
-                    f"Released {format_lakh(expenditure)} against "
+                    f"Released {format_money_rs(expenditure)} against "
                     f"{int(row['progress_pct'])}% physical progress."
                 ),
                 "signals": [
@@ -51,7 +51,7 @@ def detect(frames: Frames, today) -> list[dict]:
                     },
                     {
                         "label": "Progress vs spend",
-                        "value": f"{int(row['progress_pct'])}% progress at {format_lakh(expenditure)} released",
+                        "value": f"{int(row['progress_pct'])}% progress at {format_money_rs(expenditure)} released",
                     },
                 ],
                 "detector_inputs": {

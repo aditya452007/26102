@@ -3,12 +3,12 @@ import { Label, Pie, PieChart } from "recharts";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { formatLakh, works } from "@/lib/mplads-mock";
+import { formatMoneyRs, works } from "@/lib/mplads-mock";
 
 type FundKey = "released" | "balance";
 
-const sanctioned = works.reduce((total, w) => total + w.sanctionedLakh, 0);
-const spent = works.reduce((total, w) => total + w.expenditureLakh, 0);
+const sanctioned = works.reduce((total, w) => total + w.sanctionedRs, 0);
+const spent = works.reduce((total, w) => total + w.expenditureRs, 0);
 const balance = sanctioned - spent;
 
 const fundData: {
@@ -100,7 +100,7 @@ export function BalanceDistributionCard() {
                         x={viewBox.cx}
                         y={(viewBox.cy ?? 0) + 14}
                       >
-                        {formatLakh(sanctioned)}
+                        {formatMoneyRs(sanctioned)}
                       </tspan>
                     </text>
                   );
@@ -118,7 +118,7 @@ export function BalanceDistributionCard() {
                   <span aria-hidden="true" className="h-2 w-1 rounded-full" style={{ backgroundColor: item.fill }} />
                   <p className="truncate text-muted-foreground text-xs">{item.account}</p>
                 </div>
-                <p className="font-medium tabular-nums">{formatLakh(item.amount)}</p>
+                <p className="font-medium tabular-nums">{formatMoneyRs(item.amount)}</p>
               </div>
               <div className="font-medium tabular-nums">{item.percentage}%</div>
             </div>

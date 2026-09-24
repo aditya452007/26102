@@ -23,7 +23,7 @@ function Page() {
       <div className="space-y-1">
         <h1 className="text-3xl tracking-tight">Scheme performance</h1>
         <p className="text-muted-foreground text-sm">
-          Are delays and stalls growing? Where is risk? Demo sample of 40 works.
+          Are delays and stalls growing? Where is risk? Demo sample of 144 works.
         </p>
       </div>
 

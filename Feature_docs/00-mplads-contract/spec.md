@@ -13,11 +13,11 @@ One shared dummy-data contract so all screens build against identical shapes tha
 ```ts
 Work = { id: `W-${4 digits}`, title, type: road|community-hall|water|school|drainage|streetlight,
   state, district, agency, status: in-execution|completed|sanctioned|stalled,
-  sanctionedLakh, expenditureLakh, progressPct, sanctionDate: yyyy-MM-dd,
+  sanctionedRs, expenditureRs, progressPct, sanctionDate: yyyy-MM-dd,
   dueDate, lastUpdate, lat, lon }
 Anomaly = { id: `A-${id}`, workId, kind: cost|expenditure|delay|duplicate|utilisation,
-  severity: high|medium|low, headline, peerN: number, peerMedianLakh: number|null,
-  actualLakh: number|null, unit: "₹L", corroboration: string,
+  severity: high|medium|low, headline, peerN: number, peerMedianRs: number|null,
+  actualRs: number|null, unit: "₹", corroboration: string,
   signals: { label, value: string }[] }   // ≥1 corroborating signal REQUIRED
 Evidence = { id: `E-${id}`, workId, kind: doc|photo|report, name, sizeKb, uploadedAt, by }
 Activity = { id, workId, at: ISO, actor, action, note? }
@@ -27,15 +27,15 @@ OfficerRole = district|state|ministry
 
 ## Exact seed plan (deterministic)
 - **Geography**: 6 states (Madhya Pradesh, Rajasthan, Bihar, Odisha, Karnataka, Assam) × 2 districts each = 12 districts. District names real (officers recognize them); **work titles/agencies fictionalized** (`Contractor-07`, `Agency-East-3`) — never a real person/constituency/MP.
-- **Works**: 40 total — 18 in-execution, 8 stalled (>90d no update), 7 completed, 7 sanctioned. Amounts ₹4L–₹90L; peer groups = same type + same state, size 8–18.
-- **Flags**: 12 works flagged → 5 high (2 cost, 1 duplicate, 1 delay, 1 expenditure), 4 medium (2 delay, 1 utilisation, 1 cost), 3 low. Flagship demo work `W-1014` (community hall): cost 2.4× peer median (₹58.9L vs ₹24.6L, peerN 18) + 96d stall — the double-signal the judge opens first.
+- **Works**: 144 total (12 per district) — 66 in-execution, 27 stalled incl. flagship (>90d no update), 26 completed, 25 sanctioned. Amounts ₹8L–₹2.8Cr integer rupees; peer groups = same type + same state, size 8–18.
+- **Flags**: 24 works flagged → 8 high, 9 medium, 7 low. Flagship demo work `W-1014` (community hall): cost 2.4× peer median (₹1.90 Cr vs ₹78.0L, peerN 18) + 96d stall — the double-signal the judge opens first.
 - **Evidence**: 6 files across flagged works (site photos, completion certs, measurement sheets) + upload-simulated additions at runtime.
 - **Activity**: 2–4 seeded entries per flagged work (system flag events + 1 officer note).
 - **Geo rollup**: `{ state, works, high, delayed, stalled }` derived from works (compute, don't hand-write) for map + KPIs.
-- **KPIs**: Total Works 12,482 (scheme-scale headline) / Under Execution 4,821 / Delayed 386 / High Risk 73 / Overrun exposure ₹41L — static constants (labeled "scheme snapshot"), while queue/dossier use the 40-work set (labeled "demo sample").
+- **KPIs**: Total Works 28,410 (scheme-scale headline) / Under Execution 9,120 / Delayed 1,140 / High Risk 214 / Overrun exposure ₹128.40 Cr — static constants (labeled "scheme snapshot"), while queue/dossier use the 144-work set (labeled "demo sample").
 
 ## Formatting rules (no exceptions)
-- Money: existing `formatCurrency` idiom + `tabular-nums`; lakh display as `₹58.9L`.
+- Money: existing `formatCurrency` idiom + `tabular-nums`; adaptive `formatMoneyRs` (`₹78.0L` below ₹1 Cr, `₹1.90 Cr` at/above).
 - Dates: date-fns (`d MMM yyyy`, relative "96d ago" for stalls).
 - Comparison sentence template (used by dossier + copilot + queue reason): "`{Actual} vs {peer} median across {N} similar {type} works in {district}`".
 

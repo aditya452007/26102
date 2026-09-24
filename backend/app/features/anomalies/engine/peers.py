@@ -24,8 +24,8 @@ def peer_stats(frames: Frames) -> pd.DataFrame:
 
 
 def _group_leave_one_out(group: pd.DataFrame) -> pd.DataFrame:
-    sanctioned = group["sanctioned_lakh"].to_numpy(dtype=float)
-    expenditure = group["expenditure_lakh"].to_numpy(dtype=float)
+    sanctioned = group["sanctioned_rs"].to_numpy(dtype=float)
+    expenditure = group["expenditure_rs"].to_numpy(dtype=float)
     utilisation = np.divide(
         expenditure, sanctioned, out=np.zeros_like(sanctioned), where=sanctioned > 0
     )

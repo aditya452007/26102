@@ -37,8 +37,8 @@ export function DossierOverview({ work, decision, stallDays, utilisationPct }: D
           <h2 className="font-heading font-medium text-base">Work details</h2>
           <div className="grid gap-8 sm:grid-cols-2 xl:grid-cols-3 xl:gap-12">
             <div className="flex flex-col gap-5">
-              <Fact label="Sanctioned" value={formatINR(work.sanctionedLakh)} mono />
-              <Fact label="Spent" value={formatINR(work.expenditureLakh)} mono />
+              <Fact label="Sanctioned" value={formatINR(work.sanctionedRs)} mono />
+              <Fact label="Spent" value={formatINR(work.expenditureRs)} mono />
               <Fact label="Utilisation" value={`${utilisationPct.toFixed(0)}%`} mono />
             </div>
             <div className="flex flex-col gap-5">

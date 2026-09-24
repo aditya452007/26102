@@ -16,11 +16,11 @@
   everywhere — do not "improve" to district-level without a new ADR.)
 - `median(X)` = standard median of the peer group's values.
 - `stallDays(work)` = `DEMO_TODAY − last_update` in calendar days.
-- `overrunRatio(work)` = `sanctioned_lakh / median(peer sanctioned_lakh)`.
+- `overrunRatio(work)` = `sanctioned_rs / median(peer sanctioned_rs)` (unit-invariant ratio).
 - `DEMO_TODAY` = config `DEMO_TODAY_ISO` (2026-09-07) until real ingest.
 - Severity rank order for recompute id numbering: `high` → `medium` → `low`, then work id.
 - `detector_inputs` (JSONB) records each rule's raw inputs for audit, e.g.
-  `{"ratio": 2.394, "peer_median": 24.6, "peer_n": 18, "threshold": 1.5}`.
+  `{"ratio": 2.435, "peer_median": 7800000, "peer_n": 18, "threshold": 1.5}`.
 
 ## Rule 1 — Cost outlier (`kind: "cost"`)
 
@@ -28,21 +28,21 @@
 
 **Formula**:
 ```
-ratio = sanctioned_lakh / median(peer sanctioned_lakh)
+ratio = sanctioned_rs / median(peer sanctioned_rs)
 high   if ratio ≥ 2.0
 medium if 1.4 ≤ ratio < 2.0
 ```
 
 **Outputs** (mirror `buildAnomaly` cost branch exactly):
-- `peerMedianLakh` = `round(median, 1)`, `actualLakh` = `sanctioned_lakh`
+- `peerMedianRs` = `round10k(median)`, `actualRs` = `sanctioned_rs`
 - headline: `Sanctioned cost above peer median — needs review`
 - corroboration: `Single-estimate sanction with limited comparative quotes corroborates the variance.`
 - signals:
-  1. `Peer comparison` → `₹{actual}L vs ₹{median}L median across {N} similar {type} works in {district}` (the canonical compare sentence)
+  1. `Peer comparison` → adaptive `formatMoneyRs` sentence (e.g. `₹1.90 Cr vs ₹78.0L median across {N} similar {type} works in {district}`)
   2. `Corroborating signal` → `Estimate variance beyond peer band`
 
 **Flagship override (seed data only)**: W-1014 pins `headline` to
-`Sanctioned cost 2.4× peer median with a 96d stall — needs review`, `peerMedianLakh = 24.6`,
+`Sanctioned cost 2.4× peer median with a 96d stall — needs review`, `peerMedianRs = 7800000`,
 corroboration `Single-estimate sanction plus a 96-day stall corroborates the cost variance.`,
 and signal 2 value `96d stall — last update 96d ago`. The parity test asserts these strings.
 
@@ -59,7 +59,7 @@ medium if 90 ≤ days < 120
 ```
 
 **Outputs** (exact):
-- `peerMedianLakh = null`, `actualLakh = null` (contract: money comparison not meaningful here)
+- `peerMedianRs = null`, `actualRs = null` (contract: money comparison not meaningful here)
 - headline: `No progress update in {days}d — needs review`
 - corroboration: `Last field update was {days}d ago against a {dueDate formatted "d MMM yyyy"} due date.`
 - signals:
@@ -78,13 +78,13 @@ severity = high (always — twin candidates are inherently review-worthy)
 ```
 
 **Outputs** (exact):
-- `peerMedianLakh = null`, `actualLakh = sanctioned_lakh`
+- `peerMedianRs = null`, `actualRs = sanctioned_rs`
 - headline: `Possible overlapping scope with a nearby {type} work — needs review`
 - corroboration (twin found): `Same type and district as {twin.id} ({twin.title}); site extents need a joint review.`
 - corroboration (no twin text): `Same type and district as another sanctioned work; site extents need a joint review.`
 - signals:
   1. `Near-duplicate` → `{twin.id} — {twin.title} in {twin.district}` (or `Matched on type + district + sanction window`)
-  2. `Sanctioned cost` → `₹{sanctioned}L`
+  2. `Sanctioned cost` → adaptive `formatMoneyRs(sanctioned_rs)`
 
 ## Rule 4 — Expenditure pattern (`kind: "expenditure"`)
 
@@ -93,7 +93,7 @@ peer's expenditure median as the reference.
 
 **Formula**:
 ```
-ratio = expenditure_lakh / median(peer expenditure_lakh)
+ratio = expenditure_rs / median(peer expenditure_rs)
 high   if ratio ≥ 1.6
 medium if 1.2 ≤ ratio < 1.6
 ```
@@ -101,12 +101,12 @@ Additional guard: only flag if `progress_pct ≤ 60` (spending fast while physic
 the suspicious pattern; a 95%-done work naturally has high cumulative spend).
 
 **Outputs** (exact):
-- `peerMedianLakh` = `round(expenditure_lakh / ratio, 1)`, `actualLakh` = `expenditure_lakh`
+- `peerMedianRs` = `round10k(expenditure_rs / ratio)`, `actualRs` = `expenditure_rs`
 - headline: `Front-loaded spending pattern — needs review`
-- corroboration: `Released ₹{expenditure}L against {progressPct}% physical progress.`
+- corroboration: `Released {formatMoneyRs(expenditure_rs)} against {progressPct}% physical progress.`
 - signals:
   1. `Peer comparison` → compare sentence with expenditure values
-  2. `Progress vs spend` → `{progressPct}% progress at ₹{expenditure}L released`
+  2. `Progress vs spend` → `{progressPct}% progress at {formatMoneyRs(expenditure_rs)} released`
 
 ## Rule 5 — Low utilisation / UC pending (`kind: "utilisation"`)
 
@@ -114,14 +114,14 @@ the suspicious pattern; a 95%-done work naturally has high cumulative spend).
 
 **Formula**:
 ```
-ratio        = expenditure_lakh / sanctioned_lakh
-peer_ratio   = median(peer expenditure_lakh / peer sanctioned_lakh)
-low utilisation if ratio < 0.6 × peer_ratio   (guard: sanctioned_lakh ≥ ₹10L to skip tiny works)
+ratio        = expenditure_rs / sanctioned_rs
+peer_ratio   = median(peer expenditure_rs / peer sanctioned_rs)
+low utilisation if ratio < 0.6 × peer_ratio   (guard: sanctioned_rs ≥ ₹10L to skip tiny works)
 ```
 
 **Outputs** (exact):
-- `peerMedianLakh` = `round(sanctioned_lakh × (0.55..0.75 band from peer distribution), 1)`,
-  `actualLakh` = `expenditure_lakh`
+- `peerMedianRs` = `round10k(sanctioned_rs × (0.55..0.75 band from peer distribution))`,
+  `actualRs` = `expenditure_rs`
 - headline: `Low fund utilisation with utilisation certificate pending — needs review`
 - corroboration: `Utilisation certificate for the last released tranche is still awaited from the agency.`
 - signals:

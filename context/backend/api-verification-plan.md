@@ -26,7 +26,7 @@
 | Step | Command | Expect |
 |---|---|---|
 | Postgres up | `docker compose up -d postgres` | container healthy |
-| Pristine seed | `SEED_DEMO=force python -m app.seed.insert` | 40 works / 12 anomalies / 6 evidence / 33 activities |
+| Pristine seed | `SEED_DEMO=force python -m app.seed.insert` | 144 works / 24 anomalies / 6 evidence / 65 activities |
 | API server | `uvicorn app.main:app --port 8000`, logs → `backend/.run/uvicorn.log` | boot line + no tracebacks |
 | Meta | `GET /healthz`, `GET /docs`, `GET /openapi.json` | 200; openapi lists 23 `/api/v1` paths |
 
@@ -35,12 +35,12 @@
 | # | Endpoint + token | Assert |
 |---|---|---|
 | G1 | `POST /auth/login` ministry | 200; body keys `{accessToken, officer}`; officer has role/scopes; bcrypt roundtrip works |
-| G2 | `GET /works?lens=all` (ministry) | 200; `{items,total,page,pageSize}`; `total=40`; item keys == `workRowSchema` |
+| G2 | `GET /works?lens=all` (ministry) | 200; `{items,total,page,pageSize}`; `total=144`; item keys == `workRowSchema` |
 | G3 | `GET /works?sort=amount&order=desc&page=2&pageSize=10` | 200; 10 items; page metadata echoes; sorted |
-| G4 | `GET /works/W-1014` | 200; `sanctionedLakh=58.9`, `status="stalled"` (pinned parity row) |
+| G4 | `GET /works/W-1014` | 200; `sanctionedRs=19000000`, `status="stalled"` (pinned parity row) |
 | G5 | `GET /works/W-1014/dossier` | 200; keys `{work, flags, evidence, activity, decision?, stallDays, utilisationPct}` — **no `peers` block** (ADR-031) |
 | G6 | `GET /works/W-1014/peers` | 200; real (type,state) n≥8 computation — likely `items: []` (documented, honest) |
-| G7 | `GET /anomalies` | 200; `total=12`; first item `A-1` (order high→medium→low); signals array present |
+| G7 | `GET /anomalies` | 200; `total=24`; first item `A-1` (order high→medium→low); signals array present |
 | G8 | `GET /anomalies?severity=high` / `?workId=W-1014` | filtered counts consistent with the fixture |
 | G9 | `GET /notifications` | 200; kind rank ordering (high-risk→stall→uc→overdue), age DESC inside kind |
 | G10 | `GET /overview/kpis` · `/geo` · `/queue` | scheme constants / geo rollup rows (MP=8 works) / top-8 flagship-first queue |

@@ -2,7 +2,7 @@ import { MapPin } from "lucide-react";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
-import { formatLakh, works } from "@/lib/mplads-mock";
+import { formatMoneyRs, works } from "@/lib/mplads-mock";
 
 interface StateFunds {
   state: string;
@@ -16,8 +16,8 @@ function stateFunds(): StateFunds[] {
   for (const w of works) {
     const entry = byState.get(w.state) ?? { state: w.state, works: 0, sanctioned: 0, released: 0 };
     entry.works += 1;
-    entry.sanctioned += w.sanctionedLakh;
-    entry.released += w.expenditureLakh;
+    entry.sanctioned += w.sanctionedRs;
+    entry.released += w.expenditureRs;
     byState.set(w.state, entry);
   }
   return [...byState.values()].sort((a, b) => b.sanctioned - a.sanctioned);
@@ -45,7 +45,7 @@ export function Wallet() {
                   </span>
                 </div>
                 <span className="font-normal text-muted-foreground text-xs tabular-nums">
-                  S {formatLakh(entry.sanctioned)} • R {formatLakh(entry.released)}
+                  S {formatMoneyRs(entry.sanctioned)} • R {formatMoneyRs(entry.released)}
                 </span>
               </div>
               <div className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background">
@@ -67,7 +67,7 @@ export function Wallet() {
                   </span>
                 </div>
                 <span className="font-normal text-muted-foreground text-xs tabular-nums">
-                  S {formatLakh(entry.sanctioned)} • R {formatLakh(entry.released)}
+                  S {formatMoneyRs(entry.sanctioned)} • R {formatMoneyRs(entry.released)}
                 </span>
               </div>
               <div className="flex size-9 shrink-0 items-center justify-center rounded-md border bg-background">

@@ -5,7 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatLakh } from "@/lib/mplads-mock";
+import { formatMoneyRs } from "@/lib/mplads-mock";
 
 import type { QueueRow } from "./data";
 
@@ -26,7 +26,7 @@ export function PriorityQueue({ rows }: { readonly rows: ReadonlyArray<QueueRow>
     <Card className="h-full">
       <CardHeader>
         <CardTitle>Needs your attention</CardTitle>
-        <CardDescription>Demo sample · 40 works</CardDescription>
+        <CardDescription>Demo sample · 144 works</CardDescription>
         <CardAction>
           <a className="text-primary text-sm hover:underline" href="/dashboard/works?lens=high-risk">
             View all →
@@ -81,7 +81,7 @@ export function PriorityQueue({ rows }: { readonly rows: ReadonlyArray<QueueRow>
                   <TableCell className="max-w-64 truncate py-3 align-middle text-sm">{reason}</TableCell>
                   <TableCell className="py-3 align-middle text-muted-foreground text-sm">{work.district}</TableCell>
                   <TableCell className="py-3 text-right align-middle text-sm tabular-nums">
-                    {formatLakh(anomaly.actualLakh ?? work.sanctionedLakh)}
+                    {formatMoneyRs(anomaly.actualRs ?? work.sanctionedRs)}
                   </TableCell>
                 </TableRow>
               ))}

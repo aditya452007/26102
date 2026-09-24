@@ -5,7 +5,7 @@ import { CartesianGrid, Line, LineChart, XAxis, YAxis } from "recharts";
 import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { formatLakh, works } from "@/lib/mplads-mock";
+import { formatMoneyRs, works } from "@/lib/mplads-mock";
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -23,8 +23,8 @@ function buildSeries(): MonthPoint[] {
   for (const w of works) {
     const key = w.sanctionDate.slice(0, 7);
     const entry = byMonth.get(key) ?? { plan: 0, released: 0 };
-    entry.plan += w.sanctionedLakh;
-    entry.released += w.expenditureLakh;
+    entry.plan += w.sanctionedRs;
+    entry.released += w.expenditureRs;
     byMonth.set(key, entry);
   }
   const keys = [...byMonth.keys()].sort();
@@ -54,7 +54,7 @@ const monthFormatter = new Intl.DateTimeFormat("en-IN", {
 
 const formatMonth = (value: number) => monthFormatter.format(new Date(value));
 
-const formatTooltipLakh = (value: number | string) => formatLakh(Number(value));
+const formatTooltipMoney = (value: number | string) => formatMoneyRs(Number(value));
 
 const chartConfig = {
   released: {
@@ -132,7 +132,7 @@ export function TransactionsOverviewCard() {
 
       <CardContent>
         <p className="pb-2 text-muted-foreground text-xs">
-          Cumulative sanctioned (plan, dashed) vs released (solid) by sanction month · demo-derived from 40 works.
+          Cumulative sanctioned (plan, dashed) vs released (solid) by sanction month · demo-derived from 144 works.
         </p>
         <ChartContainer config={chartConfig} className="h-50 w-full">
           <LineChart accessibilityLayer data={chartData} margin={{ bottom: 0, left: 0, right: 0, top: 0 }}>
@@ -159,7 +159,7 @@ export function TransactionsOverviewCard() {
                   label={label}
                   payload={payload?.map((item) => ({
                     ...item,
-                    value: typeof item.value === "number" ? formatTooltipLakh(item.value) : item.value,
+                    value: typeof item.value === "number" ? formatTooltipMoney(item.value) : item.value,
                   }))}
                 />
               )}

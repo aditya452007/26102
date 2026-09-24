@@ -17,9 +17,9 @@
   "activity": [ /* ActivityOut[] — newest first */ ],
   "decision": { "status": "action-required", "note": "…", "at": "…", "by": "…" },  // latest, or null
   "financials": {                       // feeds Financials tab (line + donut)
-    "sanctionedLakh": 58.9, "expenditureLakh": 41.2,
+    "sanctionedRs": 19000000, "expenditureRs": 13300000,
     "utilisationPct": 70,
-    "peerMedianLakh": 24.6,             // null when peer_n < 8 → honesty UI, SPEC 04 Anomalies tab
+    "peerMedianRs": 7800000,             // null when peer_n < 8 → honesty UI, SPEC 04 Anomalies tab
     "peerN": 18 },
   "progress": [                         // Progress tab milestones — v1 = derived, see below
     { "stage": "Foundation", "plannedPct": 25, "actualPct": 30 },
@@ -36,7 +36,7 @@ Per-tab provenance:
 | Frontend tab | Source | Notes |
 |---|---|---|
 | Overview | `work` fields | utilisation = `expenditure/sanctioned`; stall callout uses `stalledDays` |
-| Financials | `financials` + stored anomalies | peer-median dashed band = `peerMedianLakh` (null → no band, per SPEC 04 honesty rule) |
+| Financials | `financials` + stored anomalies | peer-median dashed band = `peerMedianRs` (null → no band, per SPEC 04 honesty rule) |
 | Progress | `progress` | **v1 derivation**: split `progressPct` across the 4 fixed SPEC 04 stages (planned = due-date-proportional, actual = reported); real milestone data arrives with ingest — no contract change |
 | Anomalies | `anomalies[]` | each row already carries headline, peer stats, `signals[]`, corroboration |
 | Evidence | `evidence[]` | `storage_path` null in seed → frontend shows seeded metadata only |
@@ -50,11 +50,11 @@ Per-tab provenance:
 ```jsonc
 { "id": "A-1", "workId": "W-1014", "kind": "cost", "severity": "high",
   "headline": "Cost 2.4× peer median",
-  "peerN": 18, "peerMedianLakh": 24.6, "actualLakh": 58.9, "unit": "₹L",
+  "peerN": 18, "peerMedianRs": 7800000, "actualRs": 19000000, "unit": "₹",
   "corroboration": "Warrants manual review — spend and execution both deviate.",
   "signals": [ { "label": "No progress update", "value": "96 days" } ],
   "detectorVersion": "rules-1.0",
-  "detectorInputs": { "ratio": 2.4, "peerMedianLakh": 24.6, "actualLakh": 58.9,
+  "detectorInputs": { "ratio": 2.4, "peerMedianRs": 7800000, "actualRs": 19000000,
                       "peerType": "community-hall", "peerState": "Madhya Pradesh" } }
 ```
 

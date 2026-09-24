@@ -11,7 +11,7 @@ import {
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
-import { districtKey, INDIA_DISTRICTS_GEO, INDIA_STATES_GEO, mapColorFor } from "@/data/india-geo";
+import { districtKey, districtLabel, INDIA_DISTRICTS_GEO, INDIA_STATES_GEO, mapColorFor } from "@/data/india-geo";
 
 import type { DistrictSlice } from "./data";
 const MAP_CENTER = createCoordinates(82.8, 22.75);
@@ -57,6 +57,7 @@ export function IndiaRiskMap({ data, selected, onSelect }: IndiaRiskMapProps) {
                     const props = (geo.properties ?? {}) as { district?: string; st_nm?: string };
                     const key = districtKey(props);
                     const name = props.district ?? "Unknown";
+                    const label = districtLabel(props);
                     const counts = byDistrict.get(name);
                     const isSelected = selected === name;
                     return (
@@ -67,8 +68,8 @@ export function IndiaRiskMap({ data, selected, onSelect }: IndiaRiskMapProps) {
                         onMouseEnter={(event) => {
                           setHover({
                             text: counts
-                              ? `${name} · ${counts.works} works · ${counts.high} high-risk`
-                              : `${name} · no demo works`,
+                              ? `${label} · ${counts.works} works · ${counts.high} high-risk`
+                              : `${label} · no works in demo sample`,
                             x: event.clientX,
                             y: event.clientY,
                           });
@@ -117,7 +118,7 @@ export function IndiaRiskMap({ data, selected, onSelect }: IndiaRiskMapProps) {
           <div className="absolute bottom-2 left-2 flex items-center gap-3 rounded-md border bg-card/90 px-2.5 py-1.5 text-muted-foreground text-xs">
             <span className="flex items-center gap-1.5">
               <span className="size-3 rounded-sm border bg-muted" />
-              No works
+              No works in sample
             </span>
             <span className="flex items-center gap-1.5">
               <span className="size-3 rounded-sm border bg-primary/35" />

@@ -2,7 +2,7 @@ import { differenceInCalendarDays } from "date-fns";
 import type { LucideIcon } from "lucide-react";
 import { Flag, Inbox, MessageCircle, Sparkles } from "lucide-react";
 
-import { anomalies, compareSentence, DEMO_TODAY_ISO, formatLakh, formatWorkDate, works } from "@/lib/mplads-mock";
+import { anomalies, compareSentence, DEMO_TODAY_ISO, formatMoneyRs, formatWorkDate, works } from "@/lib/mplads-mock";
 import type { Anomaly } from "@/lib/mplads-schema";
 
 import { answerCopilot, copilotGreeting } from "./copilot-brain";
@@ -76,8 +76,8 @@ function threadExplanation(workId: string): string {
     return "No open flags on this work in the demo data.";
   }
   const numbers =
-    flag.actualLakh !== null && flag.peerMedianLakh !== null
-      ? `${compareSentence(flag.actualLakh, flag.peerMedianLakh, flag.peerN, work.type, work.district)} `
+    flag.actualRs !== null && flag.peerMedianRs !== null
+      ? `${compareSentence(flag.actualRs, flag.peerMedianRs, flag.peerN, work.type, work.district)} `
       : "";
   return `${flag.headline} ${numbers}${flag.corroboration}`;
 }
@@ -180,6 +180,6 @@ export const currentUser = {
 };
 
 export function demoTotals(): { sanctioned: string; works: number; flags: number } {
-  const sanctioned = works.reduce((total, work) => total + work.sanctionedLakh, 0);
-  return { sanctioned: formatLakh(Math.round(sanctioned * 10) / 10), works: works.length, flags: anomalies.length };
+  const sanctioned = works.reduce((total, work) => total + work.sanctionedRs, 0);
+  return { sanctioned: formatMoneyRs(Math.round(sanctioned / 10000) * 10000), works: works.length, flags: anomalies.length };
 }

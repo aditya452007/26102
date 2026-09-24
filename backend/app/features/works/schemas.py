@@ -26,7 +26,7 @@ class WorkFilters:
     sort: str = Query("id", pattern="^(amount|updated|id)$")
     order: str | None = Query(None, pattern="^(asc|desc)$")  # None → resolve by sort
     page: int = Query(1, ge=1)
-    page_size: int = Query(20, alias="pageSize", ge=1, le=100)
+    page_size: int = Query(20, alias="pageSize", ge=1, le=200)  # 144-work demo needs single-page overview fetch
 
 
 class WorkOut(CamelModel):
@@ -39,8 +39,8 @@ class WorkOut(CamelModel):
     district: str
     agency: str
     status: str
-    sanctioned_lakh: float
-    expenditure_lakh: float
+    sanctioned_rs: int
+    expenditure_rs: int
     progress_pct: int
     sanction_date: date
     due_date: date
@@ -52,7 +52,7 @@ class WorkOut(CamelModel):
     department: str
     labour_deployed: int
     demanded_days: int
-    returned_lakh: float
+    returned_rs: int
 
 
 class WorkRowOut(CamelModel):
@@ -64,7 +64,7 @@ class WorkRowOut(CamelModel):
     type: str
     district: str
     state: str
-    sanctioned_lakh: float
+    sanctioned_rs: int
     progress_pct: int
     status: str
     last_update: date
@@ -81,7 +81,7 @@ class PeerRowOut(CamelModel):
 class PeerMemberOut(CamelModel):
     id: str
     title: str
-    sanctioned_lakh: float
+    sanctioned_rs: int
 
 
 class PeersOut(CamelModel):

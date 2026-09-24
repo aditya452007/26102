@@ -14,6 +14,15 @@ def one_decimal(value: float) -> float:
     return math.floor(value * 10 + 0.5) / 10
 
 
+def round_10k(value: float) -> int:
+    """Rupee mirror of one_decimal: nearest ₹10k, half-up (TS `Math.round(x/10000)*10000`).
+
+    Money medians are stored at ₹10k precision — the rupee equivalent of the old
+    0.1L rounding, so detector peer numbers stay stable and readable.
+    """
+    return int(math.floor(value / 10000 + 0.5) * 10000)
+
+
 def median(values: Iterable[float]) -> float:
     """Median of a non-empty sequence (callers guarantee non-emptiness)."""
     seq: Sequence[float] = list(values)

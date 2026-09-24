@@ -28,8 +28,8 @@ export const workSchema = z.object({
   district: z.string().min(1),
   agency: z.string().min(1),
   status: workStatusSchema,
-  sanctionedLakh: z.number().nonnegative(),
-  expenditureLakh: z.number().nonnegative(),
+  sanctionedRs: z.number().int().nonnegative(),
+  expenditureRs: z.number().int().nonnegative(),
   progressPct: z.number().min(0).max(100),
   sanctionDate: yyyyMmDdSchema,
   dueDate: yyyyMmDdSchema,
@@ -41,7 +41,7 @@ export const workSchema = z.object({
   department: z.string().min(1),
   labourDeployed: z.number().int().min(0),
   demandedDays: z.number().int().min(1),
-  returnedLakh: z.number().nonnegative(),
+  returnedRs: z.number().int().nonnegative(),
 });
 
 export const anomalySignalSchema = z.object({
@@ -56,9 +56,9 @@ export const anomalySchema = z.object({
   severity: severitySchema,
   headline: z.string().min(1),
   peerN: z.number().int().min(8),
-  peerMedianLakh: z.number().nonnegative().nullable(),
-  actualLakh: z.number().nonnegative().nullable(),
-  unit: z.literal("₹L"),
+  peerMedianRs: z.number().int().nonnegative().nullable(),
+  actualRs: z.number().int().nonnegative().nullable(),
+  unit: z.literal("₹"),
   corroboration: z.string().min(1),
   signals: z.array(anomalySignalSchema).min(1, "Every flag needs at least one corroborating signal"),
 });

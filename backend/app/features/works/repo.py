@@ -70,7 +70,7 @@ def page_for(claims: OfficerClaims, f: WorkFilters) -> tuple[list[Work], int]:
     total = query.count()
     order_attr = {
         "id": Work.id,
-        "amount": Work.sanctioned_lakh,
+        "amount": Work.sanctioned_rs,
         "updated": Work.last_update,
     }[f.sort]
     ordered = query.order_by(orm.desc(order_attr) if f.order == "desc" else order_attr)

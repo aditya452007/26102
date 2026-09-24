@@ -10,13 +10,16 @@ MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun",
           "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
 
 
-def format_lakh(lakh: float) -> str:
-    return f"₹{lakh:.1f}L"
+def format_money_rs(rs: int) -> str:
+    """TS formatMoneyRs: `₹1.90 Cr` at/above ₹1 Cr, else `₹78.0L`."""
+    if rs >= 10_000_000:
+        return f"₹{rs / 10_000_000:.2f} Cr"
+    return f"₹{rs / 100_000:.1f}L"
 
 
-def compare_sentence(actual: float, median: float, peer_n: int, wtype: str, district: str) -> str:
+def compare_sentence(actual: int, median: int, peer_n: int, wtype: str, district: str) -> str:
     return (
-        f"{format_lakh(actual)} vs {format_lakh(median)} median across "
+        f"{format_money_rs(actual)} vs {format_money_rs(median)} median across "
         f"{peer_n} similar {wtype} works in {district}"
     )
 

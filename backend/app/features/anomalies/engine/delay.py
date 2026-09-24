@@ -30,8 +30,8 @@ def detect(frames: Frames, today) -> list[dict]:
                 "severity": severity,
                 "headline": f"No progress update in {days}d — needs review",
                 "peer_n": int(row["peer_n"]),
-                "peer_median_lakh": None,
-                "actual_lakh": None,
+                "peer_median_rs": None,
+                "actual_rs": None,
                 "corroboration": (
                     f"Last field update was {days}d ago against a "
                     f"{format_work_date(row['due_date'])} due date."

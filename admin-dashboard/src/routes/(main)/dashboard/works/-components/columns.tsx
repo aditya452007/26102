@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/components/ui/toast";
 import type { DataTableFeatures } from "@/lib/data-table-features";
-import { formatLakh, formatWorkDate, stallLabel } from "@/lib/mplads-mock";
+import { formatMoneyRs, formatWorkDate, stallLabel } from "@/lib/mplads-mock";
 
 import { DOSSIER_ENTRY_SEARCH, type RowSeverity, type WorkRow } from "./data";
 
@@ -200,10 +200,10 @@ export const columns: ColumnDef<DataTableFeatures, WorkRow>[] = [
     enableHiding: true,
   },
   {
-    accessorKey: "sanctionedLakh",
+    accessorKey: "sanctionedRs",
     header: ({ column }) => <SortMenuHeader column={column} title="Amount" />,
     cell: ({ row }) => (
-      <div className="text-right font-medium text-sm tabular-nums">{formatLakh(row.getValue("sanctionedLakh"))}</div>
+      <div className="text-right font-medium text-sm tabular-nums">{formatMoneyRs(row.getValue("sanctionedRs"))}</div>
     ),
     sortFn: "alphanumeric",
   },
