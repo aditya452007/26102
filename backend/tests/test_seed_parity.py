@@ -89,5 +89,5 @@ def test_flagship_pinned_values():
     assert a["id"] == "A-1" and a["workId"] == "W-1014"
     assert a["peerN"] == 18 and a["peerMedianRs"] == 7800000
     assert a["signals"][0]["value"] == (
-        "₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal"
+        "₹1.90 Cr vs ₹0.78 Cr median across 18 similar community-hall works in Bhopal"
     )

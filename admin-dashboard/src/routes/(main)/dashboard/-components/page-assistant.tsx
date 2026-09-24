@@ -142,7 +142,7 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
             : "No state rollup available in the demo dataset.";
         }
         if (question === "What is overrun exposure?") {
-          return `${formatMoneyRs(MPLADS_KPIS.overrunExposureRs)} above peer estimates across the scheme. Flagship ${FLAGSHIP_WORK_ID}: ₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal.`;
+          return `${formatMoneyRs(MPLADS_KPIS.overrunExposureRs)} above peer estimates across the scheme. Flagship ${FLAGSHIP_WORK_ID}: ₹1.90 Cr vs ₹0.78 Cr median across 18 similar community-hall works in Bhopal.`;
         }
         return `${MPLADS_KPIS.highRisk} high-risk works need review now; ${MPLADS_KPIS.delayed} are past due date. Start with ${FLAGSHIP_WORK_ID}, then the 8-row priority queue.`;
       },
@@ -177,7 +177,7 @@ export function resolvePageContext(pathname: string): PageAssistantProps {
       chips,
       answer: (question: string) => {
         if (question === "Where is overrun exposure?") {
-          return `${formatMoneyRs(MPLADS_KPIS.overrunExposureRs)} above peer estimates. Largest demo variance: ${FLAGSHIP_WORK_ID} at ₹1.90 Cr vs ₹78.0L peer median (18 similar works, Bhopal).`;
+          return `${formatMoneyRs(MPLADS_KPIS.overrunExposureRs)} above peer estimates. Largest demo variance: ${FLAGSHIP_WORK_ID} at ₹1.90 Cr vs ₹0.78 Cr peer median (18 similar works, Bhopal).`;
         }
         if (question === "Which tranches need UCs?") {
           return `${utilisationCount} utilisation flags have UCs pending for the last tranche. Attach the certificate in Documents before the next release.`;

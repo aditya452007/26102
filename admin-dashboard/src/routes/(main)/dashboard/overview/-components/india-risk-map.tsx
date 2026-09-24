@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 
 import { districtKey, districtLabel, INDIA_DISTRICTS_GEO, INDIA_STATES_GEO, mapColorFor } from "@/data/india-geo";
 
-import type { DistrictSlice } from "./data";
+import type { DistrictSlice, StateSlice } from "./data";
 const MAP_CENTER = createCoordinates(82.8, 22.75);
 const MAP_SCALE = 648.81;
 
@@ -25,13 +25,15 @@ interface HoverTip {
 
 interface IndiaRiskMapProps {
   data: DistrictSlice[];
+  states: StateSlice[];
   selected: string;
   onSelect: (district: string) => void;
 }
 
-export function IndiaRiskMap({ data, selected, onSelect }: IndiaRiskMapProps) {
+export function IndiaRiskMap({ data, states, selected, onSelect }: IndiaRiskMapProps) {
   const [hover, setHover] = useState<HoverTip | null>(null);
   const byDistrict = new Map(data.map((entry) => [entry.district, entry]));
+  const byState = new Map(states.map((entry) => [entry.state, entry]));
 
   return (
     <Card className="h-full">
@@ -56,27 +58,43 @@ export function IndiaRiskMap({ data, selected, onSelect }: IndiaRiskMapProps) {
                   geographies.map((geo, index) => {
                     const props = (geo.properties ?? {}) as { district?: string; st_nm?: string };
                     const key = districtKey(props);
-                    const name = props.district ?? "Unknown";
+                    const hasDistrict = Boolean(props.district);
+                    const name = props.district ?? "";
                     const label = districtLabel(props);
-                    const counts = byDistrict.get(name);
-                    const isSelected = selected === name;
+                    const counts = hasDistrict ? byDistrict.get(name) : undefined;
+                    // District-less polygons are state remainders — show that state's works.
+                    const stateCounts =
+                      !hasDistrict && props.st_nm ? byState.get(props.st_nm) : undefined;
+                    const isSelected = hasDistrict && selected === name;
                     return (
                       <Geography
                         key={`${key}-${index}`}
                         geography={geo}
-                        onClick={() => onSelect(isSelected ? "" : name)}
+                        onClick={() => {
+                          if (hasDistrict) {
+                            onSelect(isSelected ? "" : name);
+                          }
+                        }}
                         onMouseEnter={(event) => {
                           setHover({
                             text: counts
                               ? `${label} · ${counts.works} works · ${counts.high} high-risk`
-                              : `${label} · no works in demo sample`,
+                              : stateCounts
+                                ? `${label} · ${stateCounts.works} works in state · ${stateCounts.high} high-risk`
+                                : `${label} · no works in demo sample`,
                             x: event.clientX,
                             y: event.clientY,
                           });
                         }}
                         onMouseLeave={() => setHover(null)}
                         style={{
-                          default: { fill: mapColorFor(counts?.high ?? 0, counts?.works ?? 0), outline: "none" },
+                          default: {
+                            fill: mapColorFor(
+                              counts?.high ?? stateCounts?.high ?? 0,
+                              counts?.works ?? stateCounts?.works ?? 0,
+                            ),
+                            outline: "none",
+                          },
                           hover: { fill: "color-mix(in oklch, var(--primary) 25%, transparent)", outline: "none" },
                           pressed: { outline: "none" },
                         }}

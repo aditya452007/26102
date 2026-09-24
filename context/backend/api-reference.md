@@ -208,7 +208,7 @@ Query parameters: `workId` (string), `severity` (`high|medium|low`), `kind`
     "unit": "₹",
       "corroboration": "Single-estimate sanction plus a 96-day stall corroborates the cost variance.",
       "signals": [
-        { "label": "Peer comparison", "value": "₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal" },
+        { "label": "Peer comparison", "value": "₹1.90 Cr vs ₹0.78 Cr median across 18 similar community-hall works in Bhopal" },
         { "label": "Corroborating signal", "value": "96d stall — last update 96d ago" }
       ]
     }

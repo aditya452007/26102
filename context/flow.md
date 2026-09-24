@@ -33,7 +33,7 @@ graph TD
 ## User flows
 
 ### Flow: Morning triage
-**Goal**: know what needs attention today. **Steps**: Overview KPIs + risk map → high-priority queue → click top case → dossier. Map rule (ADR-035): hovering ANY district shows `District, State` plus `N works · M high-risk` or `no works in demo sample` — never a bare grey polygon; clicking an empty district filters the queue to its honest All-clear card (one click clears).
+**Goal**: know what needs attention today. **Steps**: Overview KPIs + risk map → high-priority queue → click top case → dossier. Map rule (ADR-035): hovering ANY district shows `District, State` plus `N works · M high-risk` or `no works in demo sample` — never a bare grey polygon (34 district-less remainder polygons resolve to their state name + that state's work counts); clicking an empty district filters the queue to its honest All-clear card (one click clears).
 
 ```mermaid
 flowchart LR

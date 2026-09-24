@@ -3328,7 +3328,7 @@
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹1.90 Cr vs ₹78.0L median across 18 similar community-hall works in Bhopal"
+          "value": "₹1.90 Cr vs ₹0.78 Cr median across 18 similar community-hall works in Bhopal"
         },
         {
           "label": "Corroborating signal",
@@ -3350,7 +3350,7 @@
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹22.7L vs ₹9.4L median across 16 similar road works in Udaipur"
+          "value": "₹0.23 Cr vs ₹0.09 Cr median across 16 similar road works in Udaipur"
         },
         {
           "label": "Corroborating signal",
@@ -3376,7 +3376,7 @@
         },
         {
           "label": "Sanctioned cost",
-          "value": "₹81.9L"
+          "value": "₹0.82 Cr"
         }
       ]
     },
@@ -3412,15 +3412,15 @@
       "peerMedianRs": 2000000,
       "actualRs": 4160000,
       "unit": "₹",
-      "corroboration": "Released ₹41.6L against 36% physical progress.",
+      "corroboration": "Released ₹0.42 Cr against 36% physical progress.",
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹41.6L vs ₹20.0L median across 11 similar school works in Cuttack"
+          "value": "₹0.42 Cr vs ₹0.20 Cr median across 11 similar school works in Cuttack"
         },
         {
           "label": "Progress vs spend",
-          "value": "36% progress at ₹41.6L released"
+          "value": "36% progress at ₹0.42 Cr released"
         }
       ]
     },
@@ -3482,7 +3482,7 @@
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹19.0L vs ₹51.7L median across 15 similar drainage works in Bhopal"
+          "value": "₹0.19 Cr vs ₹0.52 Cr median across 15 similar drainage works in Bhopal"
         },
         {
           "label": "Certificate status",
@@ -3504,7 +3504,7 @@
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹87.9L vs ₹53.1L median across 18 similar drainage works in Gaya"
+          "value": "₹0.88 Cr vs ₹0.53 Cr median across 18 similar drainage works in Gaya"
         },
         {
           "label": "Corroborating signal",
@@ -3522,15 +3522,15 @@
       "peerMedianRs": 800000,
       "actualRs": 1020000,
       "unit": "₹",
-      "corroboration": "Released ₹10.2L against 39% physical progress.",
+      "corroboration": "Released ₹0.10 Cr against 39% physical progress.",
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹10.2L vs ₹8.0L median across 10 similar drainage works in Dibrugarh"
+          "value": "₹0.10 Cr vs ₹0.08 Cr median across 10 similar drainage works in Dibrugarh"
         },
         {
           "label": "Progress vs spend",
-          "value": "39% progress at ₹10.2L released"
+          "value": "39% progress at ₹0.10 Cr released"
         }
       ]
     },
@@ -3592,7 +3592,7 @@
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹1.27 Cr vs ₹53.4L median across 17 similar streetlight works in Bengaluru Urban"
+          "value": "₹1.27 Cr vs ₹0.53 Cr median across 17 similar streetlight works in Bengaluru Urban"
         },
         {
           "label": "Corroborating signal",
@@ -3618,7 +3618,7 @@
         },
         {
           "label": "Sanctioned cost",
-          "value": "₹40.6L"
+          "value": "₹0.41 Cr"
         }
       ]
     },
@@ -3654,15 +3654,15 @@
       "peerMedianRs": 2410000,
       "actualRs": 3090000,
       "unit": "₹",
-      "corroboration": "Released ₹30.9L against 20% physical progress.",
+      "corroboration": "Released ₹0.31 Cr against 20% physical progress.",
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹30.9L vs ₹24.1L median across 11 similar road works in Dibrugarh"
+          "value": "₹0.31 Cr vs ₹0.24 Cr median across 11 similar road works in Dibrugarh"
         },
         {
           "label": "Progress vs spend",
-          "value": "20% progress at ₹30.9L released"
+          "value": "20% progress at ₹0.31 Cr released"
         }
       ]
     },
@@ -3680,7 +3680,7 @@
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹79.9L vs ₹44.3L median across 18 similar streetlight works in Kamrup"
+          "value": "₹0.80 Cr vs ₹0.44 Cr median across 18 similar streetlight works in Kamrup"
         },
         {
           "label": "Corroborating signal",
@@ -3702,7 +3702,7 @@
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹65.8L vs ₹1.15 Cr median across 14 similar drainage works in Dibrugarh"
+          "value": "₹0.66 Cr vs ₹1.15 Cr median across 14 similar drainage works in Dibrugarh"
         },
         {
           "label": "Certificate status",
@@ -3812,7 +3812,7 @@
       "signals": [
         {
           "label": "Peer comparison",
-          "value": "₹81.1L vs ₹85.5L median across 18 similar community-hall works in Patna"
+          "value": "₹0.81 Cr vs ₹0.85 Cr median across 18 similar community-hall works in Patna"
         },
         {
           "label": "Certificate status",

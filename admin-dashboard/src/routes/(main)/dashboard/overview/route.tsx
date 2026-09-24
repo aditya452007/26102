@@ -26,7 +26,7 @@ function Page() {
   const selectedDistrict = district ?? "";
   const seed = getOverviewData(role, selectedDistrict);
   const live = bundle.ok ? getOverviewDataFromLive(role, selectedDistrict, bundle.rows, bundle.anomalies) : null;
-  const { queue, geo } = live ?? seed;
+  const { queue, geo, states } = live ?? seed;
 
   return (
     <div className="@container/main flex flex-col gap-4 md:gap-6">
@@ -35,6 +35,7 @@ function Page() {
         <div className="xl:col-span-7">
           <IndiaRiskMap
             data={geo}
+            states={states}
             selected={selectedDistrict}
             onSelect={(next) => {
               void navigate({

@@ -38,7 +38,7 @@ medium if 1.4 ≤ ratio < 2.0
 - headline: `Sanctioned cost above peer median — needs review`
 - corroboration: `Single-estimate sanction with limited comparative quotes corroborates the variance.`
 - signals:
-  1. `Peer comparison` → adaptive `formatMoneyRs` sentence (e.g. `₹1.90 Cr vs ₹78.0L median across {N} similar {type} works in {district}`)
+  1. `Peer comparison` → always-crore `formatMoneyRs` sentence (e.g. `₹1.90 Cr vs ₹0.78 Cr median across {N} similar {type} works in {district}`)
   2. `Corroborating signal` → `Estimate variance beyond peer band`
 
 **Flagship override (seed data only)**: W-1014 pins `headline` to

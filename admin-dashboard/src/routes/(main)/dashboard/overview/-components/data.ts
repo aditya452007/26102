@@ -61,6 +61,30 @@ export interface DistrictSlice {
   high: number;
 }
 
+export interface StateSlice {
+  state: string;
+  works: number;
+  high: number;
+}
+
+/** State-level rollup for district-less (state remainder) polygons — same counting law as districts. */
+export function scopedStateGeo(
+  scoped: Array<Pick<Work, "state" | "id">>,
+  flags: Anomaly[] = anomalies,
+): StateSlice[] {
+  const highByWork = new Set(flags.filter((a) => a.severity === "high").map((a) => a.workId));
+  const byState = new Map<string, StateSlice>();
+  for (const work of scoped) {
+    const entry = byState.get(work.state) ?? { state: work.state, works: 0, high: 0 };
+    entry.works += 1;
+    if (highByWork.has(work.id)) {
+      entry.high += 1;
+    }
+    byState.set(work.state, entry);
+  }
+  return [...byState.values()].sort((a, b) => a.state.localeCompare(b.state));
+}
+
 export function scopedDistrictGeo(
   scoped: Array<Pick<Work, "district" | "id">>,
   flags: Anomaly[] = anomalies,
@@ -81,12 +105,12 @@ export function scopedDistrictGeo(
 export function getOverviewData(
   role: OfficerRole,
   selectedDistrict: string,
-): { queue: QueueRow[]; geo: DistrictSlice[] } {
+): { queue: QueueRow[]; geo: DistrictSlice[]; states: StateSlice[] } {
   const scoped = scopeWorks(role);
   const inScope =
     selectedDistrict && scoped.some((work) => work.district === selectedDistrict) ? selectedDistrict : "";
   const visible = inScope ? scoped.filter((work) => work.district === inScope) : scoped;
-  return { queue: topQueue(visible), geo: scopedDistrictGeo(scoped) };
+  return { queue: topQueue(visible), geo: scopedDistrictGeo(scoped), states: scopedStateGeo(scoped) };
 }
 
 /** Role lens over live API rows (ministry scope from the server login, filtered locally like the seed). */
@@ -106,10 +130,10 @@ export function getOverviewDataFromLive(
   selectedDistrict: string,
   rows: QueueWork[],
   flags: Anomaly[],
-): { queue: QueueRow[]; geo: DistrictSlice[] } {
+): { queue: QueueRow[]; geo: DistrictSlice[]; states: StateSlice[] } {
   const scoped = scopeLiveRows(role, rows);
   const inScope =
     selectedDistrict && scoped.some((work) => work.district === selectedDistrict) ? selectedDistrict : "";
   const visible = inScope ? scoped.filter((work) => work.district === inScope) : scoped;
-  return { queue: topQueue(visible, flags), geo: scopedDistrictGeo(scoped, flags) };
+  return { queue: topQueue(visible, flags), geo: scopedDistrictGeo(scoped, flags), states: scopedStateGeo(scoped, flags) };
 }
